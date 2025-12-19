@@ -1,0 +1,2228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urban Metrics Data Visualization</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: #FAF9F6;
+            color: #2C3E50;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        .header {
+            background: #FFFFFF;
+            padding: 8px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(44, 62, 80, 0.08);
+            border: 1px solid #E8E6E1;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 2px;
+            line-height: 1.2;
+            color: #2C3E50;
+        }
+
+        .header .subtitle {
+            color: #6B7A8A;
+            font-size: 11px;
+            line-height: 1.2;
+        }
+
+        .controls {
+            background: #FFFFFF;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(44, 62, 80, 0.08);
+            border: 1px solid #E8E6E1;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 150px;
+            padding: 5px 8px;
+            border: 1px solid #D4D1CA;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #FFFFFF;
+            color: #2C3E50;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #5B8FA3;
+            box-shadow: 0 0 0 2px rgba(91, 143, 163, 0.1);
+        }
+
+        .filter-select {
+            padding: 5px 8px;
+            border: 1px solid #D4D1CA;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #FFFFFF;
+            color: #2C3E50;
+            min-width: 100px;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #5B8FA3;
+            box-shadow: 0 0 0 2px rgba(91, 143, 163, 0.1);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 6px 12px;
+            background: #FFFFFF;
+            border: 1px solid #D4D1CA;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            color: #2C3E50;
+        }
+
+        .tab.active {
+            background: #5B8FA3;
+            color: #FFFFFF;
+            border-color: #5B8FA3;
+        }
+
+        .tab:hover:not(.active) {
+            background: #F5F3F0;
+            border-color: #C4C1BA;
+        }
+
+        .metric-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .metric-tab {
+            padding: 5px 12px;
+            background: #F0EDE8;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+            color: #2C3E50;
+        }
+
+        .metric-tab.active {
+            background: #5B8FA3;
+            color: #FFFFFF;
+        }
+
+        .metric-tab:hover:not(.active) {
+            background: #E8E6E1;
+        }
+
+        .content-panel {
+            background: #FFFFFF;
+            padding: 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(44, 62, 80, 0.08);
+            border: 1px solid #E8E6E1;
+            margin-bottom: 12px;
+        }
+
+        .visualization-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #E8E6E1;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 350px;
+            margin-bottom: 15px;
+        }
+
+        .chart-wrapper:last-child {
+            margin-bottom: 0;
+        }
+
+        .charts-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .charts-row .chart-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .charts-row .chart-title {
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #333;
+        }
+
+        .charts-row .legend {
+            margin-bottom: 6px;
+        }
+
+        .charts-row .chart-wrapper {
+            height: 250px;
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 1200px) {
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #2C3E50;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card {
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 3px solid #333;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .data-table thead {
+            background: #F5F3F0;
+            position: sticky;
+            top: 0;
+        }
+
+        .data-table th {
+            padding: 6px 6px;
+            text-align: left;
+            font-weight: 500;
+            border-bottom: 2px solid #D4D1CA;
+            white-space: nowrap;
+            font-size: 12px;
+            color: #2C3E50;
+        }
+
+        .data-table td {
+            padding: 5px 6px;
+            border-bottom: 1px solid #E8E6E1;
+            font-size: 12px;
+            color: #34495E;
+            word-wrap: break-word;
+        }
+        
+        #formulasTable td,
+        #readmeTable td {
+            white-space: normal;
+            vertical-align: top;
+            max-width: 800px;
+        }
+        
+        #formulasTable th,
+        #readmeTable th {
+            white-space: normal;
+        }
+
+        .data-table tbody tr:hover {
+            background: #F5F3F0;
+        }
+
+        .size-class-s {
+            border-left: 3px solid #6B9B8A;
+        }
+
+        .size-class-m {
+            border-left: 3px solid #5B8FA3;
+        }
+
+        .size-class-l {
+            border-left: 3px solid #D4A574;
+        }
+
+        .size-class-total {
+            border-left: 3px solid #8B9A9F;
+        }
+
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .legend {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+        }
+
+        .legend-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        .table-filter {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .table-filter-btn {
+            padding: 4px 8px;
+            background: #F0EDE8;
+            border: 1px solid #D4D1CA;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all 0.2s;
+            color: #2C3E50;
+        }
+
+        .table-filter-btn:hover {
+            background: #E8E6E1;
+            border-color: #C4C1BA;
+        }
+
+        .table-filter-btn.active {
+            background: #5B8FA3;
+            color: #FFFFFF;
+            border-color: #5B8FA3;
+        }
+
+        .country-type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 500;
+            margin-left: 6px;
+            text-transform: uppercase;
+        }
+
+        .country-type-country {
+            background: #E3F0F4;
+            color: #4A7C8F;
+        }
+
+        .country-type-region {
+            background: #F0E8E3;
+            color: #8B6F5E;
+        }
+
+        .country-type-continent {
+            background: #F5E8D4;
+            color: #B8956A;
+        }
+
+        .country-type-organization {
+            background: #E8F0E8;
+            color: #6B9B8A;
+        }
+
+        .country-type-selector {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .country-type-selector label {
+            font-size: 10px;
+            color: #6B7A8A;
+            margin-right: 3px;
+        }
+
+        .country-type-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 10px;
+        }
+
+        .country-type-checkbox input[type="checkbox"] {
+            margin: 0;
+        }
+
+        .table-row-country {
+            background: #FAF9F6;
+        }
+
+        .table-row-region {
+            background: #F5F3F0;
+            font-weight: 500;
+        }
+
+        .table-row-continent {
+            background: #F5E8D4;
+            font-weight: 600;
+        }
+
+        .table-row-organization {
+            background: #F0EDE8;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+
+            .search-input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Urban Metrics Data Visualization & Analysis System</h1>
+            <div class="subtitle">Interactive data visualization and analysis for urban indicators</div>
+        </div>
+
+        <div class="controls">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search country, size class...">
+            <select id="countryFilter" class="filter-select">
+                <option value="">All Countries</option>
+            </select>
+            <select id="sizeClassFilter" class="filter-select">
+                <option value="">All Size Classes</option>
+            </select>
+            <select id="countryTypeFilter" class="filter-select">
+                <option value="">All Types</option>
+                <option value="country">Countries Only</option>
+                <option value="region">Regions Only</option>
+                <option value="continent">Continent Only</option>
+                <option value="organization">Organizations Only</option>
+            </select>
+            <select id="sheetFilter" class="filter-select">
+                <option value="Moving_Mode">Moving Mode</option>
+                <option value="Fixed_Mode" selected>Fixed Mode</option>
+            </select>
+        </div>
+
+        <div class="tabs" id="metricTabs">
+            <button class="metric-tab active" data-metric="population">Population</button>
+            <button class="metric-tab" data-metric="area">Area</button>
+            <button class="metric-tab" data-metric="count">Count</button>
+            <button class="metric-tab" data-metric="growth">Growth</button>
+            <button class="metric-tab" data-metric="fusion">Fusion</button>
+            <button class="metric-tab" data-metric="absorb">Absorb</button>
+            <button class="metric-tab" data-metric="formulas">Formulas</button>
+            <button class="metric-tab" data-metric="readme">README</button>
+        </div>
+
+        <div class="content-panel" id="contentPanel">
+            <div class="loading">Loading data...</div>
+        </div>
+    </div>
+
+    <script>
+        let allData = {};
+        let currentSheet = 'Fixed_Mode';
+        let currentMetric = 'population';
+        let filteredData = [];
+        let charts = {};
+        
+        // Country type classification
+        const REGIONS = ['North Africa', 'West Africa', 'Central Africa', 'East Africa', 'Southern Africa'];
+        const ORGANIZATIONS = [
+            'Arab Maghreb Union', 'Common Market of Eastern and Southern Africa',
+            'Community of Sahel-Saharan States', 'East African Community',
+            'Economic Community of Central African States', 'Economic Community of West African States',
+            'Intergovernmental Authority on Development', 'Southern African Development Community',
+            'West African Economic and Monetary Union'
+        ];
+        
+        function getCountryType(country) {
+            if (!country) return 'country';
+            if (country === 'Africa') return 'continent';
+            if (REGIONS.includes(country)) return 'region';
+            if (ORGANIZATIONS.includes(country)) return 'organization';
+            return 'country'; // 3-letter codes are countries
+        }
+        
+        function parseNumberFromCell(text) {
+            if (!text) return 0;
+            // Remove commas and parse as number
+            const cleaned = String(text).replace(/,/g, '');
+            return Number(cleaned) || 0;
+        }
+
+        // Load Excel file
+        window.addEventListener('DOMContentLoaded', function() {
+            loadExcelFile();
+        });
+
+        function loadExcelFile() {
+            fetch('./urban_metrics_results_100k_1000k.xlsx')
+                .then(response => response.blob())
+                .then(blob => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        
+                        // Read all sheets
+                        workbook.SheetNames.forEach(sheetName => {
+                            const worksheet = workbook.Sheets[sheetName];
+                            allData[sheetName] = XLSX.utils.sheet_to_json(worksheet, {defval: ''});
+                        });
+                        
+                        initializeApp();
+                    };
+                    reader.readAsArrayBuffer(blob);
+                })
+                .catch(err => {
+                    document.getElementById('contentPanel').innerHTML = 
+                        '<div class="empty-state">Unable to load data file. Please ensure the file exists.</div>';
+                    console.error('Error loading file:', err);
+                });
+        }
+
+        function initializeApp() {
+            updateFilters();
+            applyFilters();
+            
+            // Bind events
+            document.getElementById('searchInput').addEventListener('input', applyFilters);
+            document.getElementById('countryFilter').addEventListener('change', function() {
+                applyFilters();
+                // Auto-show/hide visualization when country selection changes
+                updateVisualizationVisibility();
+            });
+            document.getElementById('sizeClassFilter').addEventListener('change', applyFilters);
+            document.getElementById('countryTypeFilter').addEventListener('change', applyFilters);
+            document.getElementById('sheetFilter').addEventListener('change', function() {
+                currentSheet = this.value;
+                updateFilters();
+                applyFilters();
+            });
+            
+            // Bind metric tabs
+            document.querySelectorAll('.metric-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.metric-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    currentMetric = this.dataset.metric;
+                    // For documentation tabs, render directly without filtering
+                    if (currentMetric === 'formulas' || currentMetric === 'readme') {
+                        renderContent();
+                    } else {
+                        applyFilters();
+                    }
+                });
+            });
+        }
+
+        function updateFilters() {
+            const data = allData[currentSheet] || [];
+            
+            // Update country filter
+            const countries = [...new Set(data.map(row => row.Country).filter(Boolean))].sort();
+            const countryFilter = document.getElementById('countryFilter');
+            countryFilter.innerHTML = '<option value="">All Countries</option>';
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                option.textContent = country;
+                countryFilter.appendChild(option);
+            });
+            
+            // Update size class filter - normalize to show unique normalized values
+            const sizeClasses = [...new Set(data.map(row => row.Size_Class).filter(Boolean))];
+            const normalizedSizeClasses = [...new Set(sizeClasses.map(sc => normalizeSizeClass(sc)))];
+            const sizeClassFilter = document.getElementById('sizeClassFilter');
+            sizeClassFilter.innerHTML = '<option value="">All Size Classes</option>';
+            
+            // Create options with display names
+            const displayNames = {
+                'S': 'S (<100k)',
+                'M': 'M (100k-1M)',
+                'L': 'L (>1M)',
+                'Total': 'Total'
+            };
+            
+            normalizedSizeClasses.sort().forEach(normalized => {
+                const option = document.createElement('option');
+                option.value = normalized;
+                option.textContent = displayNames[normalized] || normalized;
+                sizeClassFilter.appendChild(option);
+            });
+        }
+
+        function applyFilters() {
+            const data = allData[currentSheet] || [];
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const countryFilter = document.getElementById('countryFilter').value;
+            const sizeClassFilter = document.getElementById('sizeClassFilter').value;
+            const countryTypeFilter = document.getElementById('countryTypeFilter').value;
+            
+            filteredData = data.filter(row => {
+                const matchSearch = !searchTerm || 
+                    Object.values(row).some(val => String(val).toLowerCase().includes(searchTerm));
+                const matchCountry = !countryFilter || row.Country === countryFilter;
+                const matchSizeClassValue = matchSizeClass(row.Size_Class, sizeClassFilter);
+                const matchCountryType = !countryTypeFilter || getCountryType(row.Country) === countryTypeFilter;
+                return matchSearch && matchCountry && matchSizeClassValue && matchCountryType;
+            });
+            
+            renderContent();
+        }
+        
+        function updateVisualizationVisibility() {
+            // Get current country filter value
+            const countryFilter = document.getElementById('countryFilter').value;
+            // Show visualization only when a single country is selected
+            const shouldShow = countryFilter && countryFilter !== '';
+            
+            // Update all visualization sections
+            const vizSections = document.querySelectorAll('.visualization-section');
+            vizSections.forEach(section => {
+                if (shouldShow) {
+                    section.style.display = 'block';
+                    // Trigger chart update for current metric
+                    const metricName = section.id.replace('VizSection', '');
+                    if (metricName === 'population' && window.updatePopulationChart) {
+                        setTimeout(() => window.updatePopulationChart(), 100);
+                    } else if (metricName === 'area' && window.updateAreaChart) {
+                        setTimeout(() => window.updateAreaChart(), 100);
+                    } else if (metricName === 'count' && window.updateCountChart) {
+                        setTimeout(() => window.updateCountChart(), 100);
+                    } else if (metricName === 'fusion' && window.updateFusionCharts) {
+                        setTimeout(() => window.updateFusionCharts(), 100);
+                    } else if (metricName === 'absorb' && window.updateAbsorbCharts) {
+                        setTimeout(() => window.updateAbsorbCharts(), 100);
+                    }
+                } else {
+                    section.style.display = 'none';
+                }
+            });
+        }
+
+        function renderContent() {
+            const panel = document.getElementById('contentPanel');
+            
+            // Handle documentation sheets (Formulas and README) separately
+            if (currentMetric === 'formulas' || currentMetric === 'readme') {
+                if (currentMetric === 'formulas') {
+                    renderFormulas();
+                } else {
+                    renderREADME();
+                }
+                return;
+            }
+            
+            if (filteredData.length === 0) {
+                panel.innerHTML = '<div class="empty-state">No matching data found</div>';
+                return;
+            }
+            
+            // Destroy existing charts
+            Object.values(charts).forEach(chart => {
+                if (chart && typeof chart.destroy === 'function') chart.destroy();
+            });
+            charts = {};
+            
+            switch(currentMetric) {
+                case 'population':
+                    renderPopulation();
+                    break;
+                case 'area':
+                    renderArea();
+                    break;
+                case 'count':
+                    renderCount();
+                    break;
+                case 'growth':
+                    renderGrowth();
+                    break;
+                case 'fusion':
+                    renderFusion();
+                    break;
+                case 'absorb':
+                    renderAbsorb();
+                    break;
+            }
+            
+            // Update visualization visibility after rendering (only for data metrics)
+            if (['population', 'area', 'count', 'fusion', 'absorb'].includes(currentMetric)) {
+                setTimeout(() => updateVisualizationVisibility(), 50);
+            }
+        }
+
+        function renderPopulation() {
+            const panel = document.getElementById('contentPanel');
+            const popCols = Object.keys(filteredData[0])
+                .filter(col => col.startsWith('Population_') && !col.includes('Added') && !col.includes('Growth'))
+                .sort();
+            
+            const sizeClasses = ['S (<100k)', 'M (100k-1M)', 'L (>1M)', 'Total'];
+            const colors = {
+                'S (<100k)': '#6B9B8A',
+                'M (100k-1M)': '#5B8FA3',
+                'L (>1M)': '#D4A574',
+                'Total': '#8B9A9F'
+            };
+            
+            panel.innerHTML = `
+                <div class="chart-title">Population Data</div>
+                <div class="table-filter" id="populationTableFilter">
+                    <button class="table-filter-btn active" data-filter="">All</button>
+                    ${sizeClasses.map(sc => `
+                        <button class="table-filter-btn" data-filter="${sc}">${sc}</button>
+                    `).join('')}
+                </div>
+                <div class="country-type-selector" id="populationTypeSelector">
+                    <label>Show:</label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="country" checked> Countries
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="region" checked> Regions
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="continent" checked> Continent
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="organization" checked> Organizations
+                    </label>
+                </div>
+                <div class="table-container">
+                    ${renderTable(['Country', 'Size_Class', ...popCols], 'populationTable')}
+                </div>
+                <div class="visualization-section" id="populationVizSection" style="display: none;">
+                    <div class="chart-title">Population Trend</div>
+                    <div class="legend">
+                        ${sizeClasses.map(sc => `
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: ${colors[sc] || '#666'}"></div>
+                                <span>${sc}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="populationChart"></canvas>
+                    </div>
+                </div>
+            `;
+            
+            // Bind table filter buttons
+            const populationTableFilterEl = document.getElementById('populationTableFilter');
+            if (populationTableFilterEl) {
+                populationTableFilterEl.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('table-filter-btn')) {
+                        document.querySelectorAll('#populationTableFilter .table-filter-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        e.target.classList.add('active');
+                        const filterValue = e.target.dataset.filter;
+                        filterTable('populationTable', filterValue);
+                        if (window.updatePopulationChart) window.updatePopulationChart();
+                    }
+                });
+            }
+            
+            // Bind type selector checkboxes
+            const populationTypeSelectorEl = document.getElementById('populationTypeSelector');
+            if (populationTypeSelectorEl) {
+                populationTypeSelectorEl.addEventListener('change', function(e) {
+                    if (e.target.type === 'checkbox') {
+                        filterTableByType('populationTable');
+                        if (window.updatePopulationChart) window.updatePopulationChart();
+                    }
+                });
+            }
+            
+            // Make updatePopulationChart accessible globally
+            window.updatePopulationChart = function() {
+                const vizSection = document.getElementById('populationVizSection');
+                if (!vizSection || vizSection.style.display === 'none') return;
+                
+                // Get filtered table data
+                const table = document.getElementById('populationTable');
+                if (!table) return;
+                
+                const visibleRows = Array.from(table.querySelectorAll('tbody tr'))
+                    .filter(row => row.style.display !== 'none');
+                
+                if (visibleRows.length === 0) return;
+                
+                // Group by Size_Class from visible rows
+                const datasets = [];
+                const dataByClass = {};
+                
+                visibleRows.forEach(row => {
+                    const sizeClass = row.dataset.sizeClass;
+                    if (!sizeClass) return;
+                    const normalized = normalizeSizeClass(sizeClass);
+                    if (!dataByClass[normalized]) {
+                        dataByClass[normalized] = [];
+                    }
+                    dataByClass[normalized].push(row);
+                });
+                
+                sizeClasses.forEach(sizeClass => {
+                    const normalized = normalizeSizeClass(sizeClass);
+                    const classRows = dataByClass[normalized] || [];
+                    if (classRows.length > 0) {
+                        const totals = popCols.map(col => {
+                            return classRows.reduce((sum, row) => {
+                                const cells = row.querySelectorAll('td');
+                                const colIndex = ['Country', 'Size_Class', ...popCols].indexOf(col);
+                                if (colIndex >= 0 && cells[colIndex]) {
+                                    return sum + parseNumberFromCell(cells[colIndex].textContent);
+                                }
+                                return sum;
+                            }, 0);
+                        });
+                        
+                        datasets.push({
+                            label: sizeClass,
+                            data: totals,
+                            borderColor: colors[sizeClass] || '#666',
+                            backgroundColor: (colors[sizeClass] || '#666') + '20',
+                            tension: 0.4,
+                            fill: false
+                        });
+                    }
+                });
+                
+                if (charts.population) {
+                    charts.population.destroy();
+                }
+                
+                const ctx = document.getElementById('populationChart').getContext('2d');
+                charts.population = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: popCols.map(col => col.replace('Population_', '')),
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + 
+                                            Math.round(context.parsed.y).toLocaleString('en-US');
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return Math.round(value).toLocaleString('en-US');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderArea() {
+            const panel = document.getElementById('contentPanel');
+            const areaCols = Object.keys(filteredData[0])
+                .filter(col => col.startsWith('Area_') && !col.includes('Added') && !col.includes('Growth'))
+                .sort();
+            
+            const sizeClasses = ['S (<100k)', 'M (100k-1M)', 'L (>1M)', 'Total'];
+            const colors = {
+                'S (<100k)': '#6B9B8A',
+                'M (100k-1M)': '#5B8FA3',
+                'L (>1M)': '#D4A574',
+                'Total': '#8B9A9F'
+            };
+            
+            panel.innerHTML = `
+                <div class="chart-title">Area Data</div>
+                <div class="table-filter" id="areaTableFilter">
+                    <button class="table-filter-btn active" data-filter="">All</button>
+                    ${sizeClasses.map(sc => `
+                        <button class="table-filter-btn" data-filter="${sc}">${sc}</button>
+                    `).join('')}
+                </div>
+                <div class="country-type-selector" id="areaTypeSelector">
+                    <label>Show:</label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="country" checked> Countries
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="region" checked> Regions
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="continent" checked> Continent
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="organization" checked> Organizations
+                    </label>
+                </div>
+                <div class="table-container">
+                    ${renderTable(['Country', 'Size_Class', ...areaCols], 'areaTable')}
+                </div>
+                <div class="visualization-section" id="areaVizSection" style="display: none;">
+                    <div class="chart-title">Area Trend</div>
+                    <div class="legend">
+                        ${sizeClasses.map(sc => `
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: ${colors[sc] || '#666'}"></div>
+                                <span>${sc}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="areaChart"></canvas>
+                    </div>
+                </div>
+            `;
+            
+            // Bind table filter buttons
+            const areaTableFilterEl = document.getElementById('areaTableFilter');
+            if (areaTableFilterEl) {
+                areaTableFilterEl.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('table-filter-btn')) {
+                        document.querySelectorAll('#areaTableFilter .table-filter-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        e.target.classList.add('active');
+                        const filterValue = e.target.dataset.filter;
+                        filterTable('areaTable', filterValue);
+                        if (window.updateAreaChart) window.updateAreaChart();
+                    }
+                });
+            }
+            
+            // Bind type selector checkboxes
+            const areaTypeSelectorEl = document.getElementById('areaTypeSelector');
+            if (areaTypeSelectorEl) {
+                areaTypeSelectorEl.addEventListener('change', function(e) {
+                    if (e.target.type === 'checkbox') {
+                        filterTableByType('areaTable');
+                        if (window.updateAreaChart) window.updateAreaChart();
+                    }
+                });
+            }
+            
+            // Make updateAreaChart accessible globally
+            window.updateAreaChart = function() {
+                const vizSection = document.getElementById('areaVizSection');
+                if (!vizSection || vizSection.style.display === 'none') return;
+                
+                const table = document.getElementById('areaTable');
+                if (!table) return;
+                
+                const visibleRows = Array.from(table.querySelectorAll('tbody tr'))
+                    .filter(row => row.style.display !== 'none');
+                
+                if (visibleRows.length === 0) return;
+                
+                const datasets = [];
+                const dataByClass = {};
+                
+                visibleRows.forEach(row => {
+                    const sizeClass = row.dataset.sizeClass;
+                    if (!sizeClass) return;
+                    const normalized = normalizeSizeClass(sizeClass);
+                    if (!dataByClass[normalized]) {
+                        dataByClass[normalized] = [];
+                    }
+                    dataByClass[normalized].push(row);
+                });
+                
+                sizeClasses.forEach(sizeClass => {
+                    const normalized = normalizeSizeClass(sizeClass);
+                    const classRows = dataByClass[normalized] || [];
+                    if (classRows.length > 0) {
+                        const totals = areaCols.map(col => {
+                            return classRows.reduce((sum, row) => {
+                                const cells = row.querySelectorAll('td');
+                                const colIndex = ['Country', 'Size_Class', ...areaCols].indexOf(col);
+                                if (colIndex >= 0 && cells[colIndex]) {
+                                    return sum + parseNumberFromCell(cells[colIndex].textContent);
+                                }
+                                return sum;
+                            }, 0);
+                        });
+                        
+                        datasets.push({
+                            label: sizeClass,
+                            data: totals,
+                            borderColor: colors[sizeClass] || '#666',
+                            backgroundColor: (colors[sizeClass] || '#666') + '20',
+                            tension: 0.4,
+                            fill: false
+                        });
+                    }
+                });
+                
+                if (charts.area) {
+                    charts.area.destroy();
+                }
+                
+                const ctx = document.getElementById('areaChart').getContext('2d');
+                charts.area = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: areaCols.map(col => col.replace('Area_', '')),
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + 
+                                            Math.round(context.parsed.y).toLocaleString('en-US') + ' km²';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return Math.round(value).toLocaleString('en-US');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderCount() {
+            const panel = document.getElementById('contentPanel');
+            const countCols = Object.keys(filteredData[0])
+                .filter(col => col.startsWith('Count_') && !col.includes('Added'))
+                .sort();
+            
+            const sizeClasses = ['S (<100k)', 'M (100k-1M)', 'L (>1M)', 'Total'];
+            const colors = {
+                'S (<100k)': '#6B9B8A',
+                'M (100k-1M)': '#5B8FA3',
+                'L (>1M)': '#D4A574',
+                'Total': '#8B9A9F'
+            };
+            
+            panel.innerHTML = `
+                <div class="chart-title">Count Data</div>
+                <div class="table-filter" id="countTableFilter">
+                    <button class="table-filter-btn active" data-filter="">All</button>
+                    ${sizeClasses.map(sc => `
+                        <button class="table-filter-btn" data-filter="${sc}">${sc}</button>
+                    `).join('')}
+                </div>
+                <div class="country-type-selector" id="countTypeSelector">
+                    <label>Show:</label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="country" checked> Countries
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="region" checked> Regions
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="continent" checked> Continent
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="organization" checked> Organizations
+                    </label>
+                </div>
+                <div class="table-container">
+                    ${renderTable(['Country', 'Size_Class', ...countCols], 'countTable')}
+                </div>
+                <div class="visualization-section" id="countVizSection" style="display: none;">
+                    <div class="chart-title">Count Trend</div>
+                    <div class="legend">
+                        ${sizeClasses.map(sc => `
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: ${colors[sc] || '#666'}"></div>
+                                <span>${sc}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="countChart"></canvas>
+                    </div>
+                </div>
+            `;
+            
+            // Bind table filter buttons
+            const countTableFilterEl = document.getElementById('countTableFilter');
+            if (countTableFilterEl) {
+                countTableFilterEl.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('table-filter-btn')) {
+                        document.querySelectorAll('#countTableFilter .table-filter-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        e.target.classList.add('active');
+                        const filterValue = e.target.dataset.filter;
+                        filterTable('countTable', filterValue);
+                        if (window.updateCountChart) window.updateCountChart();
+                    }
+                });
+            }
+            
+            // Bind type selector checkboxes
+            const countTypeSelectorEl = document.getElementById('countTypeSelector');
+            if (countTypeSelectorEl) {
+                countTypeSelectorEl.addEventListener('change', function(e) {
+                    if (e.target.type === 'checkbox') {
+                        filterTableByType('countTable');
+                        if (window.updateCountChart) window.updateCountChart();
+                    }
+                });
+            }
+            
+            // Make updateCountChart accessible globally
+            window.updateCountChart = function() {
+                const vizSection = document.getElementById('countVizSection');
+                if (!vizSection || vizSection.style.display === 'none') return;
+                
+                const table = document.getElementById('countTable');
+                if (!table) return;
+                
+                const visibleRows = Array.from(table.querySelectorAll('tbody tr'))
+                    .filter(row => row.style.display !== 'none');
+                
+                if (visibleRows.length === 0) return;
+                
+                const datasets = [];
+                const dataByClass = {};
+                
+                visibleRows.forEach(row => {
+                    const sizeClass = row.dataset.sizeClass;
+                    if (!sizeClass) return;
+                    const normalized = normalizeSizeClass(sizeClass);
+                    if (!dataByClass[normalized]) {
+                        dataByClass[normalized] = [];
+                    }
+                    dataByClass[normalized].push(row);
+                });
+                
+                sizeClasses.forEach(sizeClass => {
+                    const normalized = normalizeSizeClass(sizeClass);
+                    const classRows = dataByClass[normalized] || [];
+                    if (classRows.length > 0) {
+                        const totals = countCols.map(col => {
+                            return classRows.reduce((sum, row) => {
+                                const cells = row.querySelectorAll('td');
+                                const colIndex = ['Country', 'Size_Class', ...countCols].indexOf(col);
+                                if (colIndex >= 0 && cells[colIndex]) {
+                                    return sum + parseNumberFromCell(cells[colIndex].textContent);
+                                }
+                                return sum;
+                            }, 0);
+                        });
+                        
+                        datasets.push({
+                            label: sizeClass,
+                            data: totals,
+                            borderColor: colors[sizeClass] || '#666',
+                            backgroundColor: (colors[sizeClass] || '#666') + '20',
+                            tension: 0.4,
+                            fill: false
+                        });
+                    }
+                });
+                
+                if (charts.count) {
+                    charts.count.destroy();
+                }
+                
+                const ctx = document.getElementById('countChart').getContext('2d');
+                charts.count = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: countCols.map(col => col.replace('Count_', '')),
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+
+        function renderGrowth() {
+            const panel = document.getElementById('contentPanel');
+            const growthCols = Object.keys(filteredData[0])
+                .filter(col => col.includes('Growth') || col.includes('Factor') || col.includes('Rate'))
+                .sort();
+            
+            if (growthCols.length === 0) {
+                panel.innerHTML = '<div class="empty-state">No growth metrics found in current data</div>';
+                return;
+            }
+            
+            panel.innerHTML = `
+                <div class="chart-title">Growth Metrics Data</div>
+                <div class="table-filter" id="growthTableFilter">
+                    <button class="table-filter-btn active" data-filter="">All</button>
+                    ${['S (<100k)', 'M (100k-1M)', 'L (>1M)', 'Total'].map(sc => `
+                        <button class="table-filter-btn" data-filter="${sc}">${sc}</button>
+                    `).join('')}
+                </div>
+                <div class="country-type-selector" id="growthTypeSelector">
+                    <label>Show:</label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="country" checked> Countries
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="region" checked> Regions
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="continent" checked> Continent
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="organization" checked> Organizations
+                    </label>
+                </div>
+                <div class="table-container">
+                    ${renderTable(['Country', 'Size_Class', ...growthCols], 'growthTable')}
+                </div>
+            `;
+            
+            // Bind table filter buttons
+            const growthTableFilterEl = document.getElementById('growthTableFilter');
+            if (growthTableFilterEl) {
+                growthTableFilterEl.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('table-filter-btn')) {
+                        document.querySelectorAll('#growthTableFilter .table-filter-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        e.target.classList.add('active');
+                        const filterValue = e.target.dataset.filter;
+                        filterTable('growthTable', filterValue);
+                    }
+                });
+            }
+            
+            // Bind type selector checkboxes
+            const growthTypeSelectorEl = document.getElementById('growthTypeSelector');
+            if (growthTypeSelectorEl) {
+                growthTypeSelectorEl.addEventListener('change', function(e) {
+                    if (e.target.type === 'checkbox') {
+                        filterTableByType('growthTable');
+                    }
+                });
+            }
+        }
+
+        function renderFusion() {
+            const panel = document.getElementById('contentPanel');
+            const fusionCols = Object.keys(filteredData[0])
+                .filter(col => col.toLowerCase().includes('fusion'))
+                .sort();
+            
+            if (fusionCols.length === 0) {
+                panel.innerHTML = '<div class="empty-state">No fusion metrics found in current data</div>';
+                return;
+            }
+            
+            const sizeClasses = ['S (<100k)', 'M (100k-1M)', 'L (>1M)', 'Total'];
+            const colors = {
+                'S (<100k)': '#6B9B8A',
+                'M (100k-1M)': '#5B8FA3',
+                'L (>1M)': '#D4A574',
+                'Total': '#8B9A9F'
+            };
+            
+            // Separate columns by type
+            const countCols = fusionCols.filter(col => col.toLowerCase().includes('count'));
+            const populationCols = fusionCols.filter(col => col.toLowerCase().includes('population'));
+            const areaCols = fusionCols.filter(col => col.toLowerCase().includes('area'));
+            
+            panel.innerHTML = `
+                <div class="chart-title">Fusion Data</div>
+                <div class="table-filter" id="fusionTableFilter">
+                    <button class="table-filter-btn active" data-filter="">All</button>
+                    ${sizeClasses.map(sc => `
+                        <button class="table-filter-btn" data-filter="${sc}">${sc}</button>
+                    `).join('')}
+                </div>
+                <div class="country-type-selector" id="fusionTypeSelector">
+                    <label>Show:</label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="country" checked> Countries
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="region" checked> Regions
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="continent" checked> Continent
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="organization" checked> Organizations
+                    </label>
+                </div>
+                <div class="table-container">
+                    ${renderTable(['Country', 'Size_Class', ...fusionCols], 'fusionTable')}
+                </div>
+                <div class="visualization-section" id="fusionVizSection" style="display: none;">
+                    <div class="chart-title">Fusion Metrics</div>
+                    <div class="charts-row">
+                        <div class="chart-item">
+                            <div class="chart-title">Count</div>
+                            <div class="legend">
+                                ${sizeClasses.map(sc => `
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: ${colors[sc] || '#666'}"></div>
+                                        <span>${sc}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="fusionCountChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-item">
+                            <div class="chart-title">Area (km²)</div>
+                            <div class="legend">
+                                ${sizeClasses.map(sc => `
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: ${colors[sc] || '#666'}"></div>
+                                        <span>${sc}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="fusionAreaChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-item">
+                            <div class="chart-title">Population</div>
+                            <div class="legend">
+                                ${sizeClasses.map(sc => `
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: ${colors[sc] || '#666'}"></div>
+                                        <span>${sc}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="fusionPopulationChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Bind table filter buttons
+            const fusionTableFilterEl = document.getElementById('fusionTableFilter');
+            if (fusionTableFilterEl) {
+                fusionTableFilterEl.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('table-filter-btn')) {
+                        document.querySelectorAll('#fusionTableFilter .table-filter-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        e.target.classList.add('active');
+                        const filterValue = e.target.dataset.filter;
+                        filterTable('fusionTable', filterValue);
+                        if (window.updateFusionCharts) window.updateFusionCharts();
+                    }
+                });
+            }
+            
+            // Bind type selector checkboxes
+            const fusionTypeSelectorEl = document.getElementById('fusionTypeSelector');
+            if (fusionTypeSelectorEl) {
+                fusionTypeSelectorEl.addEventListener('change', function(e) {
+                    if (e.target.type === 'checkbox') {
+                        filterTableByType('fusionTable');
+                        if (window.updateFusionCharts) window.updateFusionCharts();
+                    }
+                });
+            }
+            
+            // Make updateFusionCharts accessible globally
+            window.updateFusionCharts = function() {
+                const vizSection = document.getElementById('fusionVizSection');
+                if (!vizSection || vizSection.style.display === 'none') return;
+                
+                const table = document.getElementById('fusionTable');
+                if (!table) return;
+                
+                const visibleRows = Array.from(table.querySelectorAll('tbody tr'))
+                    .filter(row => row.style.display !== 'none');
+                
+                if (visibleRows.length === 0) return;
+                
+                // Get data from visible rows
+                const dataByClass = {};
+                visibleRows.forEach(row => {
+                    const sizeClass = row.dataset.sizeClass;
+                    if (!sizeClass) return;
+                    const normalized = normalizeSizeClass(sizeClass);
+                    if (!dataByClass[normalized]) {
+                        dataByClass[normalized] = [];
+                    }
+                    dataByClass[normalized].push(row);
+                });
+                
+                // Count Chart
+                if (countCols.length > 0) {
+                    const countDatasets = [];
+                    sizeClasses.forEach(sizeClass => {
+                        const normalized = normalizeSizeClass(sizeClass);
+                        const classRows = dataByClass[normalized] || [];
+                        if (classRows.length > 0) {
+                            const totals = countCols.map(col => {
+                                return classRows.reduce((sum, row) => {
+                                    const cells = row.querySelectorAll('td');
+                                    const colIndex = ['Country', 'Size_Class', ...fusionCols].indexOf(col);
+                                    if (colIndex >= 0 && cells[colIndex]) {
+                                        return sum + parseNumberFromCell(cells[colIndex].textContent);
+                                    }
+                                    return sum;
+                                }, 0);
+                            });
+                            countDatasets.push({
+                                label: sizeClass,
+                                data: totals,
+                                backgroundColor: colors[sizeClass] || '#666',
+                                borderColor: colors[sizeClass] || '#666',
+                                borderWidth: 1
+                            });
+                        }
+                    });
+                    
+                    if (charts.fusionCount) charts.fusionCount.destroy();
+                    const countCtx = document.getElementById('fusionCountChart').getContext('2d');
+                    charts.fusionCount = new Chart(countCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: countCols.map(col => col.replace('Fusioned agglos by 2050 (total count)', 'Count')),
+                            datasets: countDatasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'top' },
+                                tooltip: { mode: 'index', intersect: false }
+                            },
+                            scales: {
+                                x: { stacked: false },
+                                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                            }
+                        }
+                    });
+                }
+                
+                // Area Chart
+                if (areaCols.length > 0) {
+                    const areaDatasets = [];
+                    sizeClasses.forEach(sizeClass => {
+                        const normalized = normalizeSizeClass(sizeClass);
+                        const classRows = dataByClass[normalized] || [];
+                        if (classRows.length > 0) {
+                            const totals = areaCols.map(col => {
+                                return classRows.reduce((sum, row) => {
+                                    const cells = row.querySelectorAll('td');
+                                    const colIndex = ['Country', 'Size_Class', ...fusionCols].indexOf(col);
+                                    if (colIndex >= 0 && cells[colIndex]) {
+                                        return sum + parseNumberFromCell(cells[colIndex].textContent);
+                                    }
+                                    return sum;
+                                }, 0);
+                            });
+                            areaDatasets.push({
+                                label: sizeClass,
+                                data: totals,
+                                backgroundColor: colors[sizeClass] || '#666',
+                                borderColor: colors[sizeClass] || '#666',
+                                borderWidth: 1
+                            });
+                        }
+                    });
+                    
+                    if (charts.fusionArea) charts.fusionArea.destroy();
+                    const areaCtx = document.getElementById('fusionAreaChart').getContext('2d');
+                    charts.fusionArea = new Chart(areaCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: areaCols.map(col => col.replace('Fusioned area (km2) by 2050', 'Area (km²)')),
+                            datasets: areaDatasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'top' },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.dataset.label + ': ' + 
+                                                Math.round(context.parsed.y).toLocaleString('en-US') + ' km²';
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: { stacked: false },
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return Math.round(value).toLocaleString('en-US');
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                // Population Chart
+                if (populationCols.length > 0) {
+                    const populationDatasets = [];
+                    sizeClasses.forEach(sizeClass => {
+                        const normalized = normalizeSizeClass(sizeClass);
+                        const classRows = dataByClass[normalized] || [];
+                        if (classRows.length > 0) {
+                            const totals = populationCols.map(col => {
+                                return classRows.reduce((sum, row) => {
+                                    const cells = row.querySelectorAll('td');
+                                    const colIndex = ['Country', 'Size_Class', ...fusionCols].indexOf(col);
+                                    if (colIndex >= 0 && cells[colIndex]) {
+                                        return sum + parseNumberFromCell(cells[colIndex].textContent);
+                                    }
+                                    return sum;
+                                }, 0);
+                            });
+                            populationDatasets.push({
+                                label: sizeClass,
+                                data: totals,
+                                backgroundColor: colors[sizeClass] || '#666',
+                                borderColor: colors[sizeClass] || '#666',
+                                borderWidth: 1
+                            });
+                        }
+                    });
+                    
+                    if (charts.fusionPopulation) charts.fusionPopulation.destroy();
+                    const popCtx = document.getElementById('fusionPopulationChart').getContext('2d');
+                    charts.fusionPopulation = new Chart(popCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: populationCols.map(col => col.replace('Fusioned population by 2050', 'Population')),
+                            datasets: populationDatasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'top' },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.dataset.label + ': ' + 
+                                                Math.round(context.parsed.y).toLocaleString('en-US');
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: { stacked: false },
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return Math.round(value).toLocaleString('en-US');
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        function renderAbsorb() {
+            const panel = document.getElementById('contentPanel');
+            const absorbCols = Object.keys(filteredData[0])
+                .filter(col => col.toLowerCase().includes('absorb'))
+                .sort();
+            
+            if (absorbCols.length === 0) {
+                panel.innerHTML = '<div class="empty-state">No absorb metrics found in current data</div>';
+                return;
+            }
+            
+            const sizeClasses = ['S (<100k)', 'M (100k-1M)', 'L (>1M)', 'Total'];
+            const colors = {
+                'S (<100k)': '#6B9B8A',
+                'M (100k-1M)': '#5B8FA3',
+                'L (>1M)': '#D4A574',
+                'Total': '#8B9A9F'
+            };
+            
+            // Separate columns by type
+            const absorbCountCols = absorbCols.filter(col => col.toLowerCase().includes('count'));
+            const absorbPopulationCols = absorbCols.filter(col => col.toLowerCase().includes('population'));
+            const absorbAreaCols = absorbCols.filter(col => col.toLowerCase().includes('area'));
+            
+            panel.innerHTML = `
+                <div class="chart-title">Absorb Data</div>
+                <div class="table-filter" id="absorbTableFilter">
+                    <button class="table-filter-btn active" data-filter="">All</button>
+                    ${sizeClasses.map(sc => `
+                        <button class="table-filter-btn" data-filter="${sc}">${sc}</button>
+                    `).join('')}
+                </div>
+                <div class="country-type-selector" id="absorbTypeSelector">
+                    <label>Show:</label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="country" checked> Countries
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="region" checked> Regions
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="continent" checked> Continent
+                    </label>
+                    <label class="country-type-checkbox">
+                        <input type="checkbox" data-type="organization" checked> Organizations
+                    </label>
+                </div>
+                <div class="table-container">
+                    ${renderTable(['Country', 'Size_Class', ...absorbCols], 'absorbTable')}
+                </div>
+                <div class="visualization-section" id="absorbVizSection" style="display: none;">
+                    <div class="chart-title">Absorb Metrics</div>
+                    <div class="charts-row">
+                        <div class="chart-item">
+                            <div class="chart-title">Count</div>
+                            <div class="legend">
+                                ${sizeClasses.map(sc => `
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: ${colors[sc] || '#666'}"></div>
+                                        <span>${sc}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="absorbCountChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-item">
+                            <div class="chart-title">Area (km²)</div>
+                            <div class="legend">
+                                ${sizeClasses.map(sc => `
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: ${colors[sc] || '#666'}"></div>
+                                        <span>${sc}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="absorbAreaChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-item">
+                            <div class="chart-title">Population</div>
+                            <div class="legend">
+                                ${sizeClasses.map(sc => `
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: ${colors[sc] || '#666'}"></div>
+                                        <span>${sc}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="absorbPopulationChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Bind table filter buttons
+            const absorbTableFilterEl = document.getElementById('absorbTableFilter');
+            if (absorbTableFilterEl) {
+                absorbTableFilterEl.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('table-filter-btn')) {
+                        document.querySelectorAll('#absorbTableFilter .table-filter-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        e.target.classList.add('active');
+                        const filterValue = e.target.dataset.filter;
+                        filterTable('absorbTable', filterValue);
+                        if (window.updateAbsorbCharts) window.updateAbsorbCharts();
+                    }
+                });
+            }
+            
+            // Bind type selector checkboxes
+            const absorbTypeSelectorEl = document.getElementById('absorbTypeSelector');
+            if (absorbTypeSelectorEl) {
+                absorbTypeSelectorEl.addEventListener('change', function(e) {
+                    if (e.target.type === 'checkbox') {
+                        filterTableByType('absorbTable');
+                        if (window.updateAbsorbCharts) window.updateAbsorbCharts();
+                    }
+                });
+            }
+            
+            // Make updateAbsorbCharts accessible globally
+            window.updateAbsorbCharts = function() {
+                const vizSection = document.getElementById('absorbVizSection');
+                if (!vizSection || vizSection.style.display === 'none') return;
+                
+                const table = document.getElementById('absorbTable');
+                if (!table) return;
+                
+                const visibleRows = Array.from(table.querySelectorAll('tbody tr'))
+                    .filter(row => row.style.display !== 'none');
+                
+                if (visibleRows.length === 0) return;
+                
+                // Get data from visible rows
+                const dataByClass = {};
+                visibleRows.forEach(row => {
+                    const sizeClass = row.dataset.sizeClass;
+                    if (!sizeClass) return;
+                    const normalized = normalizeSizeClass(sizeClass);
+                    if (!dataByClass[normalized]) {
+                        dataByClass[normalized] = [];
+                    }
+                    dataByClass[normalized].push(row);
+                });
+                
+                // Count Chart
+                if (absorbCountCols.length > 0) {
+                    const countDatasets = [];
+                    sizeClasses.forEach(sizeClass => {
+                        const normalized = normalizeSizeClass(sizeClass);
+                        const classRows = dataByClass[normalized] || [];
+                        if (classRows.length > 0) {
+                            const totals = absorbCountCols.map(col => {
+                                return classRows.reduce((sum, row) => {
+                                    const cells = row.querySelectorAll('td');
+                                    const colIndex = ['Country', 'Size_Class', ...absorbCols].indexOf(col);
+                                    if (colIndex >= 0 && cells[colIndex]) {
+                                        return sum + parseNumberFromCell(cells[colIndex].textContent);
+                                    }
+                                    return sum;
+                                }, 0);
+                            });
+                            countDatasets.push({
+                                label: sizeClass,
+                                data: totals,
+                                backgroundColor: colors[sizeClass] || '#666',
+                                borderColor: colors[sizeClass] || '#666',
+                                borderWidth: 1
+                            });
+                        }
+                    });
+                    
+                    if (charts.absorbCount) charts.absorbCount.destroy();
+                    const countCtx = document.getElementById('absorbCountChart').getContext('2d');
+                    charts.absorbCount = new Chart(countCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: absorbCountCols.map(col => col.replace('Absorbed rural agglos by 2050 (total count)', 'Count')),
+                            datasets: countDatasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'top' },
+                                tooltip: { mode: 'index', intersect: false }
+                            },
+                            scales: {
+                                x: { stacked: false },
+                                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                            }
+                        }
+                    });
+                }
+                
+                // Area Chart
+                if (absorbAreaCols.length > 0) {
+                    const areaDatasets = [];
+                    sizeClasses.forEach(sizeClass => {
+                        const normalized = normalizeSizeClass(sizeClass);
+                        const classRows = dataByClass[normalized] || [];
+                        if (classRows.length > 0) {
+                            const totals = absorbAreaCols.map(col => {
+                                return classRows.reduce((sum, row) => {
+                                    const cells = row.querySelectorAll('td');
+                                    const colIndex = ['Country', 'Size_Class', ...absorbCols].indexOf(col);
+                                    if (colIndex >= 0 && cells[colIndex]) {
+                                        return sum + parseNumberFromCell(cells[colIndex].textContent);
+                                    }
+                                    return sum;
+                                }, 0);
+                            });
+                            areaDatasets.push({
+                                label: sizeClass,
+                                data: totals,
+                                backgroundColor: colors[sizeClass] || '#666',
+                                borderColor: colors[sizeClass] || '#666',
+                                borderWidth: 1
+                            });
+                        }
+                    });
+                    
+                    if (charts.absorbArea) charts.absorbArea.destroy();
+                    const areaCtx = document.getElementById('absorbAreaChart').getContext('2d');
+                    charts.absorbArea = new Chart(areaCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: absorbAreaCols.map(col => col.replace('Absorbed area (km2) by 2050', 'Area (km²)')),
+                            datasets: areaDatasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'top' },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.dataset.label + ': ' + 
+                                                Math.round(context.parsed.y).toLocaleString('en-US') + ' km²';
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: { stacked: false },
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return Math.round(value).toLocaleString('en-US');
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                // Population Chart
+                if (absorbPopulationCols.length > 0) {
+                    const populationDatasets = [];
+                    sizeClasses.forEach(sizeClass => {
+                        const normalized = normalizeSizeClass(sizeClass);
+                        const classRows = dataByClass[normalized] || [];
+                        if (classRows.length > 0) {
+                            const totals = absorbPopulationCols.map(col => {
+                                return classRows.reduce((sum, row) => {
+                                    const cells = row.querySelectorAll('td');
+                                    const colIndex = ['Country', 'Size_Class', ...absorbCols].indexOf(col);
+                                    if (colIndex >= 0 && cells[colIndex]) {
+                                        return sum + parseNumberFromCell(cells[colIndex].textContent);
+                                    }
+                                    return sum;
+                                }, 0);
+                            });
+                            populationDatasets.push({
+                                label: sizeClass,
+                                data: totals,
+                                backgroundColor: colors[sizeClass] || '#666',
+                                borderColor: colors[sizeClass] || '#666',
+                                borderWidth: 1
+                            });
+                        }
+                    });
+                    
+                    if (charts.absorbPopulation) charts.absorbPopulation.destroy();
+                    const popCtx = document.getElementById('absorbPopulationChart').getContext('2d');
+                    charts.absorbPopulation = new Chart(popCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: absorbPopulationCols.map(col => col.replace('Absorbed population by 2050', 'Population')),
+                            datasets: populationDatasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'top' },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.dataset.label + ': ' + 
+                                                Math.round(context.parsed.y).toLocaleString('en-US');
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: { stacked: false },
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return Math.round(value).toLocaleString('en-US');
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        function renderFormulas() {
+            const panel = document.getElementById('contentPanel');
+            const formulasData = allData['Formulas'] || [];
+            
+            if (formulasData.length === 0) {
+                panel.innerHTML = '<div class="empty-state">No formulas data found</div>';
+                return;
+            }
+            
+            // Get column names from first row (header)
+            const columns = Object.keys(formulasData[0]);
+            
+            let html = `
+                <div class="chart-title">Formulas & Field Definitions</div>
+                <div class="table-container">
+                    <table class="data-table" id="formulasTable">
+                        <thead><tr>
+            `;
+            columns.forEach(col => {
+                html += `<th>${col}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            
+            formulasData.forEach((row, index) => {
+                html += '<tr>';
+                columns.forEach(col => {
+                    let value = row[col] || '';
+                    html += `<td>${value}</td>`;
+                });
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table></div>';
+            panel.innerHTML = html;
+        }
+
+        function renderREADME() {
+            const panel = document.getElementById('contentPanel');
+            const readmeData = allData['README'] || [];
+            
+            if (readmeData.length === 0) {
+                panel.innerHTML = '<div class="empty-state">No README data found</div>';
+                return;
+            }
+            
+            // Get column names from first row (header)
+            const columns = Object.keys(readmeData[0]);
+            
+            let html = `
+                <div class="chart-title">README Documentation</div>
+                <div class="table-container">
+                    <table class="data-table" id="readmeTable">
+                        <thead><tr>
+            `;
+            columns.forEach(col => {
+                html += `<th>${col}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            
+            readmeData.forEach((row, index) => {
+                html += '<tr>';
+                columns.forEach(col => {
+                    let value = row[col] || '';
+                    html += `<td>${value}</td>`;
+                });
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table></div>';
+            panel.innerHTML = html;
+        }
+
+        function renderTable(columns, tableId) {
+            const getSizeClassClass = (sizeClass) => {
+                if (!sizeClass) return '';
+                const normalized = normalizeSizeClass(sizeClass);
+                if (normalized === 'S') return 'size-class-s';
+                if (normalized === 'M') return 'size-class-m';
+                if (normalized === 'L') return 'size-class-l';
+                if (normalized === 'Total') return 'size-class-total';
+                return '';
+            };
+            
+            const getCountryTypeClass = (country) => {
+                const type = getCountryType(country);
+                return `table-row-${type}`;
+            };
+            
+            const getCountryTypeBadge = (country) => {
+                const type = getCountryType(country);
+                const typeLabels = {
+                    'country': 'Country',
+                    'region': 'Region',
+                    'continent': 'Continent',
+                    'organization': 'Org'
+                };
+                return `<span class="country-type-badge country-type-${type}">${typeLabels[type]}</span>`;
+            };
+            
+            let html = `<table class="data-table" id="${tableId}"><thead><tr>`;
+            columns.forEach(col => {
+                html += `<th>${col}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            
+            filteredData.forEach((row, index) => {
+                const sizeClass = getSizeClassClass(row.Size_Class);
+                const countryTypeClass = getCountryTypeClass(row.Country);
+                const rowClass = `${sizeClass} ${countryTypeClass}`.trim();
+                html += `<tr class="${rowClass}" data-size-class="${row.Size_Class || ''}" data-country-type="${getCountryType(row.Country)}" data-row-index="${index}">`;
+                columns.forEach(col => {
+                    let value = row[col];
+                    let displayValue = '';
+                    if (col === 'Country') {
+                        // Add type badge to Country column
+                        displayValue = value || '';
+                        if (displayValue) {
+                            displayValue += getCountryTypeBadge(value);
+                        }
+                    } else if (typeof value === 'number') {
+                        // Format population and area columns as integers with comma separators
+                        if (col.startsWith('Population_') || col.startsWith('Area_')) {
+                            displayValue = Math.round(value).toLocaleString('en-US');
+                        } else {
+                            displayValue = value % 1 === 0 ? value : value.toFixed(2);
+                        }
+                    } else {
+                        displayValue = value || '';
+                    }
+                    html += `<td>${displayValue}</td>`;
+                });
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            return html;
+        }
+
+        function normalizeSizeClass(sizeClass) {
+            // Normalize size class to handle both formats:
+            // "S (<100k)" and "S" -> both should match "S"
+            // "M (100k-1M)" and "M" -> both should match "M"
+            // "L (>1M)" and "L" -> both should match "L"
+            if (!sizeClass) return '';
+            if (sizeClass.startsWith('S')) return 'S';
+            if (sizeClass.startsWith('M')) return 'M';
+            if (sizeClass.startsWith('L')) return 'L';
+            if (sizeClass === 'Total') return 'Total';
+            return sizeClass;
+        }
+        
+        function matchSizeClass(rowSizeClass, filterSizeClass) {
+            // Match Size_Class considering both formats
+            if (!filterSizeClass) return true;
+            if (!rowSizeClass) return false;
+            
+            // Normalize both for comparison
+            const normalizedRow = normalizeSizeClass(rowSizeClass);
+            const normalizedFilter = normalizeSizeClass(filterSizeClass);
+            
+            return normalizedRow === normalizedFilter;
+        }
+        
+        function filterBySizeClass(data, sizeClass) {
+            // Filter data by Size_Class considering both formats
+            if (!sizeClass) return data;
+            return data.filter(row => matchSizeClass(row.Size_Class, sizeClass));
+        }
+        
+        function filterTable(tableId, sizeClassFilter) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            
+            // Get current size class filter if not provided
+            if (sizeClassFilter === undefined) {
+                const filterId = tableId.replace('Table', 'TableFilter');
+                const filterContainer = document.getElementById(filterId);
+                if (filterContainer) {
+                    const activeBtn = filterContainer.querySelector('.table-filter-btn.active');
+                    sizeClassFilter = activeBtn ? activeBtn.dataset.filter : '';
+                } else {
+                    sizeClassFilter = '';
+                }
+            }
+            
+            // Normalize the filter value
+            const normalizedFilter = normalizeSizeClass(sizeClassFilter);
+            
+            // Get type filter
+            const typeSelectorId = tableId.replace('Table', 'TypeSelector');
+            const typeSelector = document.getElementById(typeSelectorId);
+            let checkedTypes = [];
+            if (typeSelector) {
+                const checkboxes = typeSelector.querySelectorAll('input[type="checkbox"]');
+                checkedTypes = Array.from(checkboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.dataset.type);
+            }
+            
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const rowSizeClass = row.dataset.sizeClass;
+                const rowCountryType = row.dataset.countryType;
+                
+                // Check size class filter (normalize both for comparison)
+                const normalizedRowSizeClass = normalizeSizeClass(rowSizeClass);
+                const matchSizeClass = !normalizedFilter || normalizedRowSizeClass === normalizedFilter;
+                
+                // Check type filter
+                const matchType = checkedTypes.length === 0 || checkedTypes.includes(rowCountryType);
+                
+                // Both filters must match
+                if (matchSizeClass && matchType) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        function filterTableByType(tableId) {
+            // Re-apply both filters
+            filterTable(tableId, undefined);
+        }
+    </script>
+</body>
+</html>
