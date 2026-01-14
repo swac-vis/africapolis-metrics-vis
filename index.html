@@ -287,6 +287,21 @@
             margin-bottom: 10px;
             flex-wrap: wrap;
             flex-shrink: 0;
+            align-items: center;
+        }
+
+        .tabs-left-group {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            flex: 1;
+        }
+
+        .tabs-right-group {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            margin-left: auto;
         }
 
         .tab {
@@ -336,6 +351,100 @@
 
         .metric-tab:hover:not(.active) {
             background: #E8E6E1;
+        }
+
+        .data-source-tab {
+            padding: 6px 16px;
+            background: #E8E6E1;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: #2C3E50;
+            margin-bottom: 10px;
+        }
+
+        .data-source-tab.active {
+            background: #5B8FA3;
+            color: #FFFFFF;
+        }
+
+        .data-source-tab:hover:not(.active) {
+            background: #D4D1CA;
+        }
+
+        .africapolis-tab {
+            padding: 5px 12px;
+            background: #F0EDE8;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+            color: #2C3E50;
+        }
+
+        .africapolis-tab.active {
+            background: #5B8FA3;
+            color: #FFFFFF;
+        }
+
+        .africapolis-tab:hover:not(.active) {
+            background: #E8E6E1;
+        }
+
+        .tab-separator {
+            width: 1px;
+            background: #D4D1CA;
+            margin: 0 5px;
+            align-self: stretch;
+        }
+
+        .tab-filter-select {
+            padding: 5px 8px;
+            border: 1px solid #D4D1CA;
+            border-radius: 4px;
+            font-size: 11px;
+            background: #FFFFFF;
+            color: #2C3E50;
+            cursor: pointer;
+            height: fit-content;
+            align-self: center;
+        }
+
+        .tab-filter-select:focus {
+            outline: none;
+            border-color: #5B8FA3;
+            box-shadow: 0 0 0 2px rgba(91, 143, 163, 0.1);
+        }
+
+        .mode-toggle-in-tabs {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .mode-toggle-in-tabs .mode-toggle-btn {
+            padding: 5px 10px;
+            font-size: 11px;
+            border: 1px solid #D4D1CA;
+            border-radius: 4px;
+            background: #FFFFFF;
+            color: #2C3E50;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-toggle-in-tabs .mode-toggle-btn:hover {
+            background: #F5F3F0;
+        }
+
+        .mode-toggle-in-tabs .mode-toggle-btn.active {
+            background: #5B8FA3;
+            color: #FFFFFF;
+            border-color: #5B8FA3;
         }
 
         .content-panel {
@@ -915,6 +1024,18 @@
             color: #34495E;
             word-wrap: break-word;
         }
+
+        .data-table th.year-highlight,
+        .data-table td.year-highlight {
+            background-color: #F7FBF9;
+            border-left: 2px solid #D4E6DE;
+            border-right: 2px solid #D4E6DE;
+        }
+
+        .data-table th.year-highlight {
+            background-color: #F2F9F6;
+            border-bottom: 1px solid #D4E6DE;
+        }
         
         #formulasTable td,
         #readmeTable td {
@@ -1248,22 +1369,13 @@
                             <button class="country-search-clear" id="countrySearchClear" style="display: none;">×</button>
                             <div class="country-search-dropdown" id="countrySearchDropdown"></div>
                         </div>
-            <select id="sizeClassFilter" class="filter-select">
-                <option value="">All Size Classes</option>
-            </select>
             <select id="countryTypeFilter" class="filter-select">
                 <option value="">All Types</option>
                 <option value="country">Countries Only</option>
                 <option value="region">Regions Only</option>
                 <option value="continent">Continent Only</option>
-                <option value="organization">Organizations Only</option>
+                <option value="organization">Regional Entities Only</option>
             </select>
-                    </div>
-                    <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
-                        <div class="mode-toggle">
-                            <button class="mode-toggle-btn" data-mode="Fixed_Mode" id="fixedModeBtn">Fixed Mode</button>
-                            <button class="mode-toggle-btn" data-mode="Moving_Mode" id="movingModeBtn">Moving Mode</button>
-                        </div>
                     </div>
                 </div>
                 <div class="map-controls">
@@ -1299,14 +1411,45 @@
 
             <!-- Right Panel: Data -->
             <div class="right-panel">
+        <!-- Main Data Source Toggle -->
+        <div class="tabs" id="dataSourceTabs">
+            <button class="data-source-tab active" data-source="urban-metrics">Urban Metrics Data</button>
+            <button class="data-source-tab" data-source="africapolis">Africapolis Raw Data</button>
+        </div>
 
+        <!-- Urban Metrics Tabs -->
         <div class="tabs" id="metricTabs">
-            <button class="metric-tab active" data-metric="population">Population</button>
-            <button class="metric-tab" data-metric="area">Area</button>
-            <button class="metric-tab" data-metric="count">Count</button>
-            <button class="metric-tab" data-metric="growth">Growth</button>
-            <button class="metric-tab" data-metric="fusion">Fusion</button>
-            <button class="metric-tab" data-metric="absorb">Absorb</button>
+            <div class="tabs-left-group">
+                <button class="metric-tab active" data-metric="population">Population</button>
+                <button class="metric-tab" data-metric="area">Area</button>
+                <button class="metric-tab" data-metric="count">Count</button>
+                <button class="metric-tab" data-metric="growth">Growth</button>
+                <button class="metric-tab" data-metric="fusion">Fusion</button>
+                <button class="metric-tab" data-metric="absorb">Absorb</button>
+            </div>
+            <div class="tabs-right-group">
+                <div class="tab-separator"></div>
+                <select id="sizeClassFilter" class="tab-filter-select">
+                    <option value="">All Size Classes</option>
+                </select>
+                <div class="mode-toggle-in-tabs">
+                    <button class="mode-toggle-btn" data-mode="Fixed_Mode" id="fixedModeBtn">Fixed Mode</button>
+                    <button class="mode-toggle-btn" data-mode="Moving_Mode" id="movingModeBtn">Moving Mode</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Africapolis Tabs -->
+        <div class="tabs" id="africapolisTabs" style="display: none;">
+            <button class="africapolis-tab active" data-africapolis="basic">Basic Info</button>
+            <button class="africapolis-tab" data-africapolis="urbanpop">Urban Population</button>
+            <button class="africapolis-tab" data-africapolis="totalpop">Total Population</button>
+            <button class="africapolis-tab" data-africapolis="mpop">Metropolitan Population</button>
+            <button class="africapolis-tab" data-africapolis="urbanlevel">Urban Level</button>
+            <button class="africapolis-tab" data-africapolis="usurf">Urban Surface</button>
+            <button class="africapolis-tab" data-africapolis="numagglos">Num Agglos</button>
+            <button class="africapolis-tab" data-africapolis="adba">Distance between Agglomerations</button>
+            <button class="africapolis-tab" data-africapolis="environment">Environment</button>
         </div>
 
         <div class="content-panel" id="contentPanel">
@@ -1337,6 +1480,8 @@
         let allData = {};
         let currentSheet = 'Fixed_Mode';
         let currentMetric = 'population';
+        let currentDataSource = 'urban-metrics'; // 'urban-metrics' or 'africapolis'
+        let currentAfricapolisTab = 'basic'; // Current Africapolis tab type
         let filteredData = [];
         let charts = {};
         let allCountries = []; // Store all countries for search
@@ -1461,6 +1606,7 @@
         });
 
         function loadExcelFile() {
+            // Load first Excel file
             fetch('./urban_metrics_results_100k_1000k.xlsx')
                 .then(response => response.blob())
                 .then(blob => {
@@ -1475,7 +1621,8 @@
                             allData[sheetName] = XLSX.utils.sheet_to_json(worksheet, {defval: ''});
                         });
                         
-                        initializeApp();
+                        // Load second Excel file
+                        loadAfricapolisCountryFile();
                     };
                     reader.readAsArrayBuffer(blob);
                 })
@@ -1483,6 +1630,40 @@
                     document.getElementById('contentPanel').innerHTML = 
                         '<div class="empty-state">Unable to load data file. Please ensure the file exists.</div>';
                     console.error('Error loading file:', err);
+                });
+        }
+
+        function loadAfricapolisCountryFile() {
+            fetch('./Africapolis_country_2025__wENV.xlsx')
+                .then(response => response.blob())
+                .then(blob => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        
+                        console.log('Africapolis file sheets:', workbook.SheetNames);
+                        
+                        // Read all sheets with prefix to avoid conflicts
+                        workbook.SheetNames.forEach(sheetName => {
+                            const worksheet = workbook.Sheets[sheetName];
+                            // Use prefix 'Africapolis_' to distinguish from other data
+                            const dataKey = 'Africapolis_' + sheetName;
+                            allData[dataKey] = XLSX.utils.sheet_to_json(worksheet, {defval: ''});
+                            console.log(`Loaded sheet "${sheetName}" as "${dataKey}" with ${allData[dataKey].length} rows`);
+                            if (allData[dataKey].length > 0) {
+                                console.log(`First row columns:`, Object.keys(allData[dataKey][0]).slice(0, 10));
+                            }
+                        });
+                        
+                        initializeApp();
+                    };
+                    reader.readAsArrayBuffer(blob);
+                })
+                .catch(err => {
+                    console.warn('Error loading Africapolis_country file:', err);
+                    // Still initialize app even if this file fails
+                    initializeApp();
                 });
         }
 
@@ -1589,7 +1770,7 @@
                     const groupLabels = {
                         continent: 'Continent',
                         region: 'Regions',
-                        organization: 'Organizations',
+                        organization: 'Regional Entities',
                         country: 'Countries'
                     };
                     
@@ -1702,6 +1883,71 @@
                     countrySearchDropdown.classList.remove('show');
                 }
             });
+            // Main data source toggle
+            document.querySelectorAll('.data-source-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Preserve current filter state (especially selectedCountry)
+                    const preservedCountry = selectedCountry;
+                    const preservedCountryInput = document.getElementById('countrySearchInput').value;
+                    
+                    document.querySelectorAll('.data-source-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    currentDataSource = this.dataset.source;
+                    
+                    if (currentDataSource === 'urban-metrics') {
+                        // Show urban metrics tabs, hide africapolis tabs
+                        document.getElementById('metricTabs').style.display = 'flex';
+                        document.getElementById('africapolisTabs').style.display = 'none';
+                        // Show reference information panel (it's for urban metrics)
+                        const referencePanel = document.querySelector('.reference-panel');
+                        if (referencePanel) {
+                            referencePanel.style.display = 'block';
+                        }
+                        // Reset to first metric if needed
+                        if (!['population', 'area', 'count', 'growth', 'fusion', 'absorb'].includes(currentMetric)) {
+                            currentMetric = 'population';
+                            document.querySelectorAll('.metric-tab').forEach(t => t.classList.remove('active'));
+                            document.querySelector('.metric-tab[data-metric="population"]').classList.add('active');
+                        }
+                    } else {
+                        // Show africapolis tabs, hide urban metrics tabs
+                        document.getElementById('metricTabs').style.display = 'none';
+                        document.getElementById('africapolisTabs').style.display = 'flex';
+                        // Hide reference information panel (it's only for urban metrics)
+                        const referencePanel = document.querySelector('.reference-panel');
+                        if (referencePanel) {
+                            referencePanel.style.display = 'none';
+                        }
+                        currentMetric = 'africapolis';
+                    }
+                    
+                    // Update filters while preserving country filter
+                    updateFilters(true);
+                    
+                    // Restore preserved filter state
+                    if (preservedCountry) {
+                        selectedCountry = preservedCountry;
+                        const countrySearchInput = document.getElementById('countrySearchInput');
+                        if (countrySearchInput) {
+                            countrySearchInput.value = preservedCountryInput;
+                            document.getElementById('countrySearchClear').style.display = 'block';
+                        }
+                    }
+                    
+                    applyFilters();
+                });
+            });
+
+            // Africapolis tabs
+            document.querySelectorAll('.africapolis-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.africapolis-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    currentAfricapolisTab = this.dataset.africapolis;
+                    applyFilters();
+                });
+            });
+
             document.getElementById('sizeClassFilter').addEventListener('change', function() {
                 applyFilters();
                 // Update map when size class changes
@@ -1809,13 +2055,33 @@
             updateModeButtons();
             updateMetricTabsVisibility();
             
-            // Bind metric tabs
+            // Initialize data source display
+            if (currentDataSource === 'urban-metrics') {
+                document.getElementById('metricTabs').style.display = 'flex';
+                document.getElementById('africapolisTabs').style.display = 'none';
+                // Show reference information panel
+                const referencePanel = document.querySelector('.reference-panel');
+                if (referencePanel) {
+                    referencePanel.style.display = 'block';
+                }
+            } else {
+                document.getElementById('metricTabs').style.display = 'none';
+                document.getElementById('africapolisTabs').style.display = 'flex';
+                // Hide reference information panel
+                const referencePanel = document.querySelector('.reference-panel');
+                if (referencePanel) {
+                    referencePanel.style.display = 'none';
+                }
+            }
+            
+            // Bind metric tabs (only when urban-metrics is active)
             document.querySelectorAll('.metric-tab').forEach(tab => {
                 tab.addEventListener('click', function() {
+                    if (currentDataSource !== 'urban-metrics') return;
                     document.querySelectorAll('.metric-tab').forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
                     currentMetric = this.dataset.metric;
-                        applyFilters();
+                    applyFilters();
                 });
             });
             
@@ -1871,71 +2137,100 @@
             });
         }
 
-        function updateFilters() {
-            const data = allData[currentSheet] || [];
+        function updateFilters(preserveCountryFilter = false) {
+            // Determine data source based on current data source
+            let dataSource = currentSheet;
+            if (currentDataSource === 'africapolis') {
+                dataSource = 'Africapolis_Country';
+            }
+            const data = allData[dataSource] || [];
             
-            // Update country list for search
-            allCountries = [...new Set(data.map(row => row.Country).filter(Boolean))].sort();
+            // Update country list for search - combine with Africapolis data if available
+            const countries = [...new Set(data.map(row => row.Country).filter(Boolean))];
+            if (currentDataSource !== 'africapolis' && allData['Africapolis_Country']) {
+                const africapolisCountries = [...new Set(allData['Africapolis_Country'].map(row => row.Country).filter(Boolean))];
+                countries.push(...africapolisCountries);
+            }
+            allCountries = [...new Set(countries)].sort();
             
-            // Clear country search
-            const countrySearchInput = document.getElementById('countrySearchInput');
-            if (countrySearchInput) {
-                countrySearchInput.value = '';
-                selectedCountry = '';
-                document.getElementById('countrySearchClear').style.display = 'none';
-                document.getElementById('countrySearchDropdown').classList.remove('show');
+            // Clear country search only if not preserving filter state
+            if (!preserveCountryFilter) {
+                const countrySearchInput = document.getElementById('countrySearchInput');
+                if (countrySearchInput) {
+                    countrySearchInput.value = '';
+                    selectedCountry = '';
+                    document.getElementById('countrySearchClear').style.display = 'none';
+                    document.getElementById('countrySearchDropdown').classList.remove('show');
+                }
             }
             
             // Update size class filter - normalize to show unique normalized values
-            const sizeClasses = [...new Set(data.map(row => row.Size_Class).filter(Boolean))];
-            const normalizedSizeClasses = [...new Set(sizeClasses.map(sc => normalizeSizeClass(sc)))];
+            // For Africapolis data, Size_Class might not exist
             const sizeClassFilter = document.getElementById('sizeClassFilter');
-            sizeClassFilter.innerHTML = '<option value="">All Size Classes</option>';
-            
-            // Create options with display names
-            const displayNames = {
-                'S': 'S (<100k)',
-                'M': 'M (100k-1M)',
-                'L': 'L (>1M)',
-                'Total': 'Total'
-            };
-            
-            // Add Total if it exists in data
-            if (normalizedSizeClasses.includes('Total')) {
-                const totalOption = document.createElement('option');
-                totalOption.value = 'Total';
-                totalOption.textContent = 'Total';
-                sizeClassFilter.appendChild(totalOption);
+            if (currentDataSource === 'africapolis') {
+                // Africapolis data doesn't have Size_Class, so disable the filter
+                sizeClassFilter.innerHTML = '<option value="">All Size Classes</option>';
+                sizeClassFilter.value = '';
+                sizeClassFilter.disabled = true;
+            } else {
+                sizeClassFilter.disabled = false;
+                const sizeClasses = [...new Set(data.map(row => row.Size_Class).filter(Boolean))];
+                const normalizedSizeClasses = [...new Set(sizeClasses.map(sc => normalizeSizeClass(sc)))];
+                sizeClassFilter.innerHTML = '<option value="">All Size Classes</option>';
+                
+                // Create options with display names
+                const displayNames = {
+                    'S': 'S (<100k)',
+                    'M': 'M (100k-1M)',
+                    'L': 'L (>1M)',
+                    'Total': 'Total'
+                };
+                
+                // Add Total if it exists in data
+                if (normalizedSizeClasses.includes('Total')) {
+                    const totalOption = document.createElement('option');
+                    totalOption.value = 'Total';
+                    totalOption.textContent = 'Total';
+                    sizeClassFilter.appendChild(totalOption);
+                }
+                
+                // Add other size classes
+                normalizedSizeClasses.filter(sc => sc !== 'Total').sort().forEach(normalized => {
+                    const option = document.createElement('option');
+                    option.value = normalized;
+                    option.textContent = displayNames[normalized] || normalized;
+                    sizeClassFilter.appendChild(option);
+                });
+                
+                // If Total doesn't exist in data, add it anyway for map compatibility
+                if (!normalizedSizeClasses.includes('Total')) {
+                    const totalOption = document.createElement('option');
+                    totalOption.value = 'Total';
+                    totalOption.textContent = 'Total';
+                    sizeClassFilter.appendChild(totalOption);
+                }
+                
+                // Default to "All Size Classes" (empty value)
+                sizeClassFilter.value = '';
             }
-            
-            // Add other size classes
-            normalizedSizeClasses.filter(sc => sc !== 'Total').sort().forEach(normalized => {
-                const option = document.createElement('option');
-                option.value = normalized;
-                option.textContent = displayNames[normalized] || normalized;
-                sizeClassFilter.appendChild(option);
-            });
-            
-            // If Total doesn't exist in data, add it anyway for map compatibility
-            if (!normalizedSizeClasses.includes('Total')) {
-                const totalOption = document.createElement('option');
-                totalOption.value = 'Total';
-                totalOption.textContent = 'Total';
-                sizeClassFilter.appendChild(totalOption);
-            }
-            
-            // Default to "All Size Classes" (empty value)
-            sizeClassFilter.value = '';
         }
 
         function applyFilters() {
-            const data = allData[currentSheet] || [];
+            // Determine data source based on current data source
+            let dataSource = currentSheet;
+            if (currentDataSource === 'africapolis') {
+                dataSource = 'Africapolis_Country';
+            }
+            const data = allData[dataSource] || [];
             const sizeClassFilter = document.getElementById('sizeClassFilter').value;
             const countryTypeFilter = document.getElementById('countryTypeFilter').value;
             
             filteredData = data.filter(row => {
-                const matchCountry = !selectedCountry || row.Country === selectedCountry;
-                const matchSizeClassValue = matchSizeClass(row.Size_Class, sizeClassFilter);
+                const matchCountry = !selectedCountry || row.Country === selectedCountry || row.ISO === selectedCountry;
+                // For Africapolis data, Size_Class might not exist
+                const matchSizeClassValue = row.Size_Class !== undefined 
+                    ? matchSizeClass(row.Size_Class, sizeClassFilter)
+                    : true; // If no Size_Class column, always match
                 const matchCountryType = !countryTypeFilter || getCountryType(row.Country) === countryTypeFilter;
                 return matchCountry && matchSizeClassValue && matchCountryType;
             });
@@ -1977,7 +2272,17 @@
             // Handle map separately
             // Map is now always visible in left panel, no need to render here
             
-            if (filteredData.length === 0) {
+            // Check data source based on currentDataSource
+            if (currentDataSource === 'africapolis') {
+                const dataSource = 'Africapolis_Country';
+                const data = allData[dataSource] || [];
+                if (data.length === 0) {
+                    panel.innerHTML = '<div class="empty-state">No Africapolis country data found. Please ensure the file Africapolis_country_2025__wENV.xlsx exists.</div>';
+                    return;
+                }
+                renderAfricapolisCountry();
+                return;
+            } else if (filteredData.length === 0) {
                 panel.innerHTML = '<div class="empty-state">No matching data found</div>';
                 return;
             }
@@ -2013,6 +2318,10 @@
             if (['population', 'area', 'count', 'fusion', 'absorb'].includes(currentMetric)) {
                 setTimeout(() => updateVisualizationVisibility(), 50);
             }
+            
+            // Highlight year columns after rendering
+            const currentYear = document.getElementById('mapYearValue')?.value || document.getElementById('mapYear')?.value || '2020';
+            setTimeout(() => highlightYearColumns(currentYear), 100);
         }
 
         function renderPopulation() {
@@ -2044,7 +2353,7 @@
                         <input type="checkbox" data-type="continent" checked> Continent
                     </label>
                     <label class="country-type-checkbox">
-                        <input type="checkbox" data-type="organization" checked> Organizations
+                        <input type="checkbox" data-type="organization" checked> Regional Entities
                     </label>
                     </div>
                 </div>
@@ -2204,7 +2513,7 @@
                         <input type="checkbox" data-type="continent" checked> Continent
                     </label>
                     <label class="country-type-checkbox">
-                        <input type="checkbox" data-type="organization" checked> Organizations
+                        <input type="checkbox" data-type="organization" checked> Regional Entities
                     </label>
                     </div>
                 </div>
@@ -2362,7 +2671,7 @@
                         <input type="checkbox" data-type="continent" checked> Continent
                     </label>
                     <label class="country-type-checkbox">
-                        <input type="checkbox" data-type="organization" checked> Organizations
+                        <input type="checkbox" data-type="organization" checked> Regional Entities
                     </label>
                     </div>
                 </div>
@@ -2510,7 +2819,7 @@
                         <input type="checkbox" data-type="continent" checked> Continent
                     </label>
                     <label class="country-type-checkbox">
-                        <input type="checkbox" data-type="organization" checked> Organizations
+                        <input type="checkbox" data-type="organization" checked> Regional Entities
                     </label>
                     </div>
                 </div>
@@ -2570,7 +2879,7 @@
                         <input type="checkbox" data-type="continent" checked> Continent
                     </label>
                     <label class="country-type-checkbox">
-                        <input type="checkbox" data-type="organization" checked> Organizations
+                        <input type="checkbox" data-type="organization" checked> Regional Entities
                     </label>
                     </div>
                 </div>
@@ -2888,7 +3197,7 @@
                         <input type="checkbox" data-type="continent" checked> Continent
                     </label>
                     <label class="country-type-checkbox">
-                        <input type="checkbox" data-type="organization" checked> Organizations
+                        <input type="checkbox" data-type="organization" checked> Regional Entities
                     </label>
                     </div>
                 </div>
@@ -3167,6 +3476,297 @@
             }
         }
 
+        function renderAfricapolisCountry() {
+            const panel = document.getElementById('contentPanel');
+            
+            // Get data directly from allData if filteredData is empty
+            const dataSource = 'Africapolis_Country';
+            let dataToUse = filteredData.length > 0 ? filteredData : (allData[dataSource] || []);
+            
+            if (dataToUse.length === 0) {
+                panel.innerHTML = '<div class="empty-state">No Africapolis country data found. Please ensure the file Africapolis_country_2025__wENV.xlsx exists.</div>';
+                return;
+            }
+            
+            // Get all columns from the first row (keep original names with spaces)
+            const allColumnsOriginal = Object.keys(dataToUse[0]);
+            
+            // Create a mapping from trimmed names to original names
+            const columnNameMap = {};
+            allColumnsOriginal.forEach(origCol => {
+                const trimmed = origCol.trim();
+                if (!columnNameMap[trimmed]) {
+                    columnNameMap[trimmed] = origCol;
+                }
+            });
+            
+            // Use trimmed column names for matching
+            const allColumns = allColumnsOriginal.map(col => col.trim());
+            
+            // Debug: log available columns
+            console.log('Africapolis data columns:', allColumns.slice(0, 20));
+            console.log('Data rows count:', dataToUse.length);
+            
+            // Organize columns into groups (case-insensitive matching)
+            // Map back to original column names (with spaces) for data access
+            const basicCols = ['ISO', 'Country', 'Country_FR', 'AU_Regions', 'Area'];
+            const urbanPopCols = allColumns.filter(col => {
+                const colUpper = col.toUpperCase();
+                return colUpper.startsWith('UPOP');
+            }).map(col => columnNameMap[col] || col).sort();
+            const totalPopCols = allColumns.filter(col => {
+                const colUpper = col.toUpperCase();
+                return colUpper.startsWith('TPOP');
+            }).map(col => columnNameMap[col] || col).sort();
+            const urbanLevelCols = allColumns.filter(col => {
+                const colUpper = col.toUpperCase();
+                return colUpper.startsWith('URBANLEVEL');
+            }).map(col => columnNameMap[col] || col).sort();
+            const usurfCols = allColumns.filter(col => {
+                const colUpper = col.toUpperCase();
+                return colUpper.startsWith('USURF');
+            }).map(col => columnNameMap[col] || col).sort();
+            const numAgglosCols = allColumns.filter(col => {
+                const colUpper = col.toUpperCase();
+                return colUpper.startsWith('NUMAGGLOS');
+            }).map(col => columnNameMap[col] || col).sort();
+            const mpopCols = allColumns.filter(col => {
+                const colUpper = col.toUpperCase();
+                return colUpper.startsWith('MPOP');
+            }).map(col => columnNameMap[col] || col).sort();
+            const adbaCols = allColumns.filter(col => {
+                const colUpper = col.toUpperCase();
+                return colUpper.startsWith('ADBA');
+            }).map(col => columnNameMap[col] || col).sort();
+            
+            // Debug: log found columns
+            console.log('Urban Pop columns found:', urbanPopCols);
+            console.log('Total Pop columns found:', totalPopCols);
+            console.log('Urban Surface columns found:', usurfCols);
+            const envCols = allColumns.filter(col => {
+                const colUpper = col.toUpperCase();
+                return colUpper.includes('TREE_COVER') || colUpper.includes('SHRUBLAND_COVER') || 
+                       colUpper.includes('GRASSLAND_COVER') || colUpper.includes('URBAN_GREEN_SPACE') ||
+                       colUpper.includes('SPRAWL') || colUpper.includes('ELONGATION') || 
+                       colUpper.includes('STREET_LENGTH') || colUpper.includes('INT_DENSITY') ||
+                       colUpper.includes('PM2.5') || colUpper.includes('TOTALFOOTPRINT');
+            }).map(col => columnNameMap[col] || col).sort();
+            
+            // Debug: log found environment columns
+            console.log('Environment columns found:', envCols);
+            
+            // Determine which columns to display based on currentAfricapolisTab
+            let displayColumns = [];
+            let tableTitle = 'Africapolis Country Data';
+            
+            // Helper function to get original column name (with spaces)
+            const getOriginalColName = (colName) => {
+                return columnNameMap[colName.trim()] || colName;
+            };
+            
+            switch(currentAfricapolisTab) {
+                case 'basic':
+                    displayColumns = basicCols.map(col => getOriginalColName(col)).filter(col => allColumnsOriginal.includes(col));
+                    tableTitle = 'Africapolis Country Data - Basic Information';
+                    break;
+                case 'urbanpop':
+                    if (urbanPopCols.length === 0) {
+                        panel.innerHTML = '<div class="empty-state">No Urban Population columns found in data</div>';
+                        return;
+                    }
+                    displayColumns = [getOriginalColName('ISO'), getOriginalColName('Country'), ...urbanPopCols];
+                    tableTitle = 'Africapolis Country Data - Urban Population';
+                    break;
+                case 'totalpop':
+                    if (totalPopCols.length === 0) {
+                        panel.innerHTML = '<div class="empty-state">No Total Population columns found in data</div>';
+                        return;
+                    }
+                    displayColumns = [getOriginalColName('ISO'), getOriginalColName('Country'), ...totalPopCols];
+                    tableTitle = 'Africapolis Country Data - Total Population';
+                    break;
+                case 'urbanlevel':
+                    if (urbanLevelCols.length === 0) {
+                        panel.innerHTML = '<div class="empty-state">No Urban Level columns found in data</div>';
+                        return;
+                    }
+                    displayColumns = [getOriginalColName('ISO'), getOriginalColName('Country'), ...urbanLevelCols];
+                    tableTitle = 'Africapolis Country Data - Urban Level';
+                    break;
+                case 'usurf':
+                    if (usurfCols.length === 0) {
+                        panel.innerHTML = '<div class="empty-state">No Urban Surface columns found in data</div>';
+                        return;
+                    }
+                    displayColumns = [getOriginalColName('ISO'), getOriginalColName('Country'), ...usurfCols];
+                    tableTitle = 'Africapolis Country Data - Urban Surface';
+                    break;
+                case 'numagglos':
+                    if (numAgglosCols.length === 0) {
+                        panel.innerHTML = '<div class="empty-state">No Number of Agglomerations columns found in data</div>';
+                        return;
+                    }
+                    displayColumns = ['ISO', 'Country', ...numAgglosCols];
+                    tableTitle = 'Africapolis Country Data - Number of Agglomerations';
+                    break;
+                case 'mpop':
+                    if (mpopCols.length === 0) {
+                        panel.innerHTML = '<div class="empty-state">No Metropolitan Population columns found in data</div>';
+                        return;
+                    }
+                    displayColumns = [getOriginalColName('ISO'), getOriginalColName('Country'), ...mpopCols];
+                    tableTitle = 'Africapolis Country Data - Metropolitan Population';
+                    break;
+                case 'adba':
+                    if (adbaCols.length === 0) {
+                        panel.innerHTML = '<div class="empty-state">No Distance between Agglomerations columns found in data</div>';
+                        return;
+                    }
+                    displayColumns = [getOriginalColName('ISO'), getOriginalColName('Country'), ...adbaCols];
+                    tableTitle = 'Africapolis Country Data - Distance between Agglomerations';
+                    break;
+                case 'environment':
+                    if (envCols.length === 0) {
+                        panel.innerHTML = '<div class="empty-state">No Environment columns found in data</div>';
+                        return;
+                    }
+                    displayColumns = [getOriginalColName('ISO'), getOriginalColName('Country'), ...envCols];
+                    tableTitle = 'Africapolis Country Data - Environment';
+                    break;
+                default:
+                    displayColumns = basicCols.filter(col => allColumns.includes(col));
+                    tableTitle = 'Africapolis Country Data - Basic Information';
+            }
+            
+            // Ensure we have at least ISO and Country columns
+            if (displayColumns.length === 0) {
+                panel.innerHTML = '<div class="empty-state">No data columns available</div>';
+                return;
+            }
+            
+            panel.innerHTML = `
+                <div class="table-header-fixed">
+                    <div class="chart-title">${tableTitle}</div>
+                    <div class="country-type-selector" id="africapolisTypeSelector">
+                        <label>Show:</label>
+                        <label class="country-type-checkbox">
+                            <input type="checkbox" data-type="country" checked> Countries
+                        </label>
+                        <label class="country-type-checkbox">
+                            <input type="checkbox" data-type="region" checked> Regions
+                        </label>
+                        <label class="country-type-checkbox">
+                            <input type="checkbox" data-type="continent" checked> Continent
+                        </label>
+                        <label class="country-type-checkbox">
+                            <input type="checkbox" data-type="organization" checked> Regional Entities
+                        </label>
+                    </div>
+                </div>
+                <div class="table-container">
+                    ${renderAfricapolisTable(displayColumns, 'africapolisTable')}
+                </div>
+            `;
+            
+            // Bind type selector checkboxes
+            const africapolisTypeSelectorEl = document.getElementById('africapolisTypeSelector');
+            if (africapolisTypeSelectorEl) {
+                africapolisTypeSelectorEl.addEventListener('change', function(e) {
+                    if (e.target.type === 'checkbox') {
+                        filterTableByType('africapolisTable');
+                    }
+                });
+            }
+        }
+
+        function renderAfricapolisTable(columns, tableId) {
+            const getCountryTypeClass = (country) => {
+                const type = getCountryType(country);
+                return `table-row-${type}`;
+            };
+            
+            const getCountryTypeBadge = (country) => {
+                const type = getCountryType(country);
+                const typeLabels = {
+                    'country': 'Country',
+                    'region': 'Region',
+                    'continent': 'Continent',
+                    'organization': 'Regional Entities'
+                };
+                return `<span class="country-type-badge country-type-${type}">${typeLabels[type]}</span>`;
+            };
+            
+            let html = `<table class="data-table" id="${tableId}"><thead><tr>`;
+            columns.forEach(col => {
+                html += `<th>${col}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            
+            // Use filteredData if available, otherwise use all data
+            const dataToRender = filteredData.length > 0 ? filteredData : (allData['Africapolis_Country'] || []);
+            
+            dataToRender.forEach((row, index) => {
+                // Get Country value (handle spaces in column name)
+                const countryCol = columns.find(c => c.trim() === 'Country' || c === 'Country') || 'Country';
+                const countryValue = row[countryCol] || row['Country'] || row[' Country '] || '';
+                const countryTypeClass = getCountryTypeClass(countryValue);
+                html += `<tr class="${countryTypeClass}" data-country-type="${getCountryType(countryValue)}" data-row-index="${index}">`;
+                columns.forEach(col => {
+                    // Try to get value using the column name as-is, or try trimmed version
+                    let value = row[col];
+                    if (value === undefined || value === null || value === '') {
+                        // Try trimmed column name
+                        const trimmedCol = col.trim();
+                        if (trimmedCol !== col && row[trimmedCol] !== undefined) {
+                            value = row[trimmedCol];
+                        }
+                    }
+                    let displayValue = '';
+                    // Check if column is Country (handle spaces)
+                    const isCountryCol = col.trim() === 'Country' || col === 'Country';
+                    if (isCountryCol) {
+                        // Add type badge to Country column
+                        displayValue = value || '';
+                        if (displayValue) {
+                            displayValue += getCountryTypeBadge(value);
+                        }
+                    } else if (typeof value === 'number') {
+                        // Format numeric values
+                        const colTrimmed = col.trim();
+                        if (colTrimmed.startsWith('Mpop')) {
+                            // Mpop is percentage (as decimal) - format as percentage with 2 decimal places
+                            displayValue = (value * 100).toFixed(2) + '%';
+                        } else if (colTrimmed.startsWith('Upop') || colTrimmed.startsWith('TPOP') || 
+                                   colTrimmed.startsWith('ADBA') || colTrimmed.startsWith('NumAgglos')) {
+                            // Population and count columns - format as integers with commas
+                            displayValue = Math.round(value).toLocaleString('en-US');
+                        } else if (colTrimmed.startsWith('Usurf') || colTrimmed.startsWith('Area') || 
+                                   colTrimmed.includes('TotalFootprint') || colTrimmed.includes('street_length')) {
+                            // Area and length columns - format with 2 decimal places
+                            displayValue = value.toFixed(2).toLocaleString('en-US');
+                        } else if (colTrimmed.startsWith('Urbanlevel')) {
+                            // Urbanlevel is percentage (as decimal) - format as percentage with 2 decimal places
+                            displayValue = (value * 100).toFixed(2) + '%';
+                        } else if (colTrimmed.includes('_p_') || 
+                                   col.includes('Sprawl') || col.includes('Elongation') || 
+                                   col.includes('int_density') || col.includes('PM2.5')) {
+                            // Percentage and ratio columns - format with 2 decimal places
+                            displayValue = value.toFixed(2);
+                        } else {
+                            displayValue = value % 1 === 0 ? value.toLocaleString('en-US') : value.toFixed(2);
+                        }
+                    } else {
+                        displayValue = value || '';
+                    }
+                    html += `<td>${displayValue}</td>`;
+                });
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            return html;
+        }
+
         // Store play interval globally to allow cleanup
         let globalMapPlayInterval = null;
         let isAutoPlaying = false; // Flag to prevent event loops during auto-play
@@ -3279,6 +3879,7 @@
                 const year = this.value;
                 yearValue.value = year;
                 renderMapVisualization(countryData);
+                highlightYearColumns(year);
             };
             yearSlider.addEventListener('input', yearSliderHandler);
             
@@ -3289,6 +3890,7 @@
                 const year = this.value;
                 yearSlider.value = year;
                 renderMapVisualization(countryData);
+                highlightYearColumns(year);
             };
             yearValue.addEventListener('change', yearValueHandler);
             
@@ -3335,6 +3937,8 @@
                         yearSlider.value = nextYear;
                         yearValue.value = nextYear;
                         renderMapVisualization(countryData);
+                        // Update year column highlighting during playback
+                        highlightYearColumns(nextYear);
                         // Reset flag after a short delay to allow manual changes
                         setTimeout(function() {
                             isAutoPlaying = false;
@@ -4096,6 +4700,9 @@
         }
 
         function renderTable(columns, tableId) {
+            // Get current selected year from map
+            const currentYear = document.getElementById('mapYearValue')?.value || document.getElementById('mapYear')?.value || '2020';
+            
             const getSizeClassClass = (sizeClass) => {
                 if (!sizeClass) return '';
                 const normalized = normalizeSizeClass(sizeClass);
@@ -4117,14 +4724,19 @@
                     'country': 'Country',
                     'region': 'Region',
                     'continent': 'Continent',
-                    'organization': 'Org'
+                    'organization': 'Regional Entities'
                 };
                 return `<span class="country-type-badge country-type-${type}">${typeLabels[type]}</span>`;
             };
             
             let html = `<table class="data-table" id="${tableId}"><thead><tr>`;
             columns.forEach(col => {
-                html += `<th>${col}</th>`;
+                // Check if this column matches the current year
+                const isYearColumn = (col.startsWith('Population_') || col.startsWith('Area_') || 
+                                     col.startsWith('Count_') || col.startsWith('Growth_')) && 
+                                    col.endsWith(`_${currentYear}`);
+                const highlightClass = isYearColumn ? ' year-highlight' : '';
+                html += `<th class="${highlightClass.trim()}" data-column="${col}">${col}</th>`;
             });
             html += '</tr></thead><tbody>';
             
@@ -4134,6 +4746,12 @@
                 const rowClass = `${sizeClass} ${countryTypeClass}`.trim();
                 html += `<tr class="${rowClass}" data-size-class="${row.Size_Class || ''}" data-country-type="${getCountryType(row.Country)}" data-row-index="${index}">`;
                 columns.forEach(col => {
+                    // Check if this column matches the current year
+                    const isYearColumn = (col.startsWith('Population_') || col.startsWith('Area_') || 
+                                         col.startsWith('Count_') || col.startsWith('Growth_')) && 
+                                        col.endsWith(`_${currentYear}`);
+                    const highlightClass = isYearColumn ? ' year-highlight' : '';
+                    
                     let value = row[col];
                     let displayValue = '';
                     if (col === 'Country') {
@@ -4152,13 +4770,45 @@
                     } else {
                         displayValue = value || '';
                     }
-                    html += `<td>${displayValue}</td>`;
+                    html += `<td class="${highlightClass.trim()}" data-column="${col}">${displayValue}</td>`;
                 });
                 html += '</tr>';
             });
             
             html += '</tbody></table>';
             return html;
+        }
+
+        function highlightYearColumns(year) {
+            // Only highlight if we're in urban-metrics mode
+            if (currentDataSource !== 'urban-metrics') return;
+            
+            // Find all tables
+            const tables = document.querySelectorAll('.data-table');
+            tables.forEach(table => {
+                // Remove previous highlights
+                table.querySelectorAll('.year-highlight').forEach(el => {
+                    el.classList.remove('year-highlight');
+                });
+                
+                // Add highlight to matching columns
+                const headers = table.querySelectorAll('thead th');
+                
+                headers.forEach((th, index) => {
+                    const col = th.textContent || th.dataset.column || '';
+                    const isYearColumn = (col.startsWith('Population_') || col.startsWith('Area_') || 
+                                         col.startsWith('Count_') || col.startsWith('Growth_')) && 
+                                        col.endsWith(`_${year}`);
+                    if (isYearColumn) {
+                        th.classList.add('year-highlight');
+                        // Also highlight corresponding cells in tbody
+                        const cells = table.querySelectorAll(`tbody td:nth-child(${index + 1})`);
+                        cells.forEach(cell => {
+                            cell.classList.add('year-highlight');
+                        });
+                    }
+                });
+            });
         }
 
         function normalizeSizeClass(sizeClass) {
