@@ -86,6 +86,26 @@
             line-height: 1.2;
         }
 
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .header-fusion-link {
+            font-size: 12px;
+            color: #5B8FA3;
+            text-decoration: none;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .header-fusion-link:hover {
+            text-decoration: underline;
+        }
+
         .controls {
             background: #FFFFFF;
             padding: 8px 12px;
@@ -1134,6 +1154,10 @@
             padding-bottom: 6px;
             margin-bottom: 6px;
         }
+
+        .analysis-link:hover {
+            text-decoration: underline !important;
+        }
         
         .table-header-fixed .country-type-selector {
             background: #FFFFFF;
@@ -1451,8 +1475,13 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Urban Metrics Data Visualization & Analysis System</h1>
-            <div class="subtitle">Interactive data visualization and analysis for urban indicators</div>
+            <div class="header-top">
+                <div>
+                    <h1>Urban Metrics Data Visualization & Analysis System</h1>
+                    <div class="subtitle">Interactive data visualization and analysis for urban indicators</div>
+                </div>
+                <a href="fusion-absorb-analysis.html" target="_blank" class="header-fusion-link">Open Fusion &amp; Absorb Analysis →</a>
+            </div>
         </div>
 
         <div class="main-layout">

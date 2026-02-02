@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fusion & Absorb – Country Analysis</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+    <style>
+        /* Palette from index.html map/chart: primary #5B8FA3 (M), highlight #D4A574 (L), S #6B9B8A, Total #8B9A9F; light fills #E8F0F5, #F5E8D4 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        *::-webkit-scrollbar {
+            display: none;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #FAF9F6;
+            color: #2C3E50;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 1280px;
+        }
+        .header {
+            flex-shrink: 0;
+            background: #fff;
+            padding: 8px 14px;
+            border-bottom: 1px solid #E8E6E1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header h1 { font-size: 17px; font-weight: 600; color: #2C3E50; }
+        .header a {
+            color: #5B8FA3;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .header a:hover { text-decoration: underline; }
+        .main {
+            flex: 1;
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            min-height: 0;
+        }
+        .panel-left {
+            width: 380px;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #E8E6E1;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .panel-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+            flex-basis: 840px;
+        }
+        .panel-section {
+            padding: 12px 14px;
+            border-bottom: 1px solid #F0EEEA;
+        }
+        .panel-section:last-child {
+            border-bottom: none;
+        }
+        .panel-section-filters {
+            flex-shrink: 0;
+            background: #FAFBFC;
+        }
+        .panel-section-list {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 0 6px;
+        }
+        .panel-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #6B7A8A;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 10px;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .filter-row label {
+            flex: 0 0 72px;
+            font-size: 12px;
+            color: #2C3E50;
+        }
+        .filter-row select,
+        .filter-row input[type="text"] {
+            flex: 1;
+            min-width: 0;
+        }
+        .filter-row-button {
+            margin-top: 4px;
+        }
+        .filter-row-button button {
+            width: 100%;
+        }
+        select, input[type="text"] {
+            padding: 8px 10px;
+            border: 1px solid #D4D1CA;
+            border-radius: 6px;
+            font-size: 12px;
+            background: #fff;
+            color: #2C3E50;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #5B8FA3;
+            box-shadow: 0 0 0 2px rgba(91, 143, 163, 0.1);
+        }
+        button {
+            padding: 8px 12px;
+            border: 1px solid #D4D1CA;
+            border-radius: 6px;
+            font-size: 12px;
+            background: #fff;
+            color: #2C3E50;
+            cursor: pointer;
+        }
+        button:hover { background: #F5F3F0; border-color: #5B8FA3; color: #5B8FA3; }
+        .score-desc {
+            font-size: 11px;
+            color: #6B7A8A;
+            line-height: 1.45;
+            margin-top: 6px;
+            padding: 8px 10px;
+            background: #fff;
+            border-radius: 6px;
+            border: 1px solid #E8E6E1;
+        }
+        .list-header {
+            padding: 8px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #6B7A8A;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            background: #FAFBFC;
+            border-bottom: 1px solid #E8E6E1;
+        }
+        .chart-card {
+            background: #fff;
+            border-radius: 6px;
+            border: 1px solid #E8E6E1;
+            padding: 8px;
+            flex: 1;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chart-card h3 {
+            font-size: 11px;
+            font-weight: 600;
+            color: #2C3E50;
+            margin-bottom: 6px;
+        }
+        .chart-container {
+            flex: 1;
+            min-height: 160px;
+            position: relative;
+        }
+        .charts-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            min-height: 0;
+        }
+        .charts-bar-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 10px;
+            flex-shrink: 0;
+            min-height: 300px;
+        }
+        .charts-bar-row .chart-card {
+            min-height: 280px;
+            min-width: 200px;
+        }
+        .charts-bar-row .chart-container {
+            min-height: 240px;
+        }
+        .chart-card-bubble {
+            flex: 1;
+            min-height: 220px;
+        }
+        .chart-card-bubble .chart-container {
+            min-height: 180px;
+        }
+        .chart-container-bubble {
+            position: relative;
+        }
+        .selection-rect {
+            position: absolute;
+            border: 2px dashed #6B9B8A;
+            background: rgba(107, 155, 138, 0.12);
+            pointer-events: none;
+            display: none;
+            z-index: 2;
+        }
+        .selection-rect.visible {
+            display: block;
+        }
+        .chart-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+        .chart-card-header h3 {
+            margin-bottom: 0;
+        }
+        .chart-toolbar {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .chart-toolbar-btn {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border: 1px solid #D4D1CA;
+            border-radius: 4px;
+            background: #fff;
+            color: #2C3E50;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chart-toolbar-btn:hover {
+            background: #F5F3F0;
+            border-color: #5B8FA3;
+            color: #5B8FA3;
+        }
+        .chart-toolbar-btn.active {
+            background: #E8F0F5;
+            border-color: #5B8FA3;
+            color: #5B8FA3;
+        }
+        .chart-toolbar-icon {
+            width: 18px;
+            height: 18px;
+        }
+        .table-wrap {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+        }
+        .data-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .data-table th, .data-table td {
+            padding: 6px 8px;
+            text-align: left;
+            border-bottom: 1px solid #F0EEEA;
+        }
+        .data-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .data-table th {
+            background: #F5F3F0;
+            color: #6B7A8A;
+            font-weight: 600;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+            padding: 4px 6px;
+        }
+        .data-table th:hover { background: #E8E6E1; }
+        .data-table th.sorted-asc::after { content: ' ▲'; font-size: 9px; }
+        .data-table th.sorted-desc::after { content: ' ▼'; font-size: 9px; }
+        .data-table tbody tr {
+            cursor: pointer;
+        }
+        .data-table tbody tr:hover { background: #F8F7F5; }
+        .data-table tbody tr.highlighted {
+            background: #F5E8D4 !important;
+            border-left: 4px solid #D4A574;
+            box-shadow: inset 0 0 0 1px rgba(212, 165, 116, 0.35);
+        }
+        .data-table .num { text-align: right; }
+        .data-table td:first-child, .data-table th:first-child { font-weight: 500; color: #2C3E50; width: 28%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .score-bar {
+            height: 6px;
+            background: #E8E6E1;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .score-bar-fill {
+            height: 100%;
+            background: #5B8FA3;
+            border-radius: 3px;
+        }
+        .loading { padding: 20px; text-align: center; color: #6B7A8A; }
+        .empty-state { padding: 20px; text-align: center; color: #6B7A8A; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Fusion & Absorb – Country Analysis</h1>
+        <a href="index.html">← Back to Urban Metrics</a>
+    </div>
+    <div class="main">
+        <div class="panel-left">
+            <div class="panel-section panel-section-filters">
+                <div class="panel-title">Filters</div>
+                <div class="filter-group">
+                    <div class="filter-row">
+                        <label>Metric</label>
+                        <select id="metricType">
+                            <option value="fusion">Fusion</option>
+                            <option value="absorb">Absorb</option>
+                        </select>
+                    </div>
+                    <div class="filter-row">
+                        <label>Search</label>
+                        <input type="text" id="searchCountry" placeholder="Country name...">
+                    </div>
+                    <div class="filter-row">
+                        <label>Sort by</label>
+                        <select id="sortBy">
+                            <option value="score">Composite score</option>
+                            <option value="count">Count (agglos)</option>
+                            <option value="population">Population</option>
+                            <option value="area">Area (km²)</option>
+                        </select>
+                    </div>
+                    <div class="filter-row">
+                        <label>Top N</label>
+                        <select id="topN">
+                            <option value="999" selected>All</option>
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                            <option value="30">30</option>
+                            <option value="42">42</option>
+                        </select>
+                    </div>
+                    <div class="filter-row filter-row-button">
+                        <button type="button" id="clearSelection">Clear selection</button>
+                    </div>
+                </div>
+                <div class="panel-title" style="margin-top: 14px;">Score</div>
+                <p class="score-desc">Composite index (0–1): equal-weight average of normalized ranks on # agglomerations fused, population involved, and area involved. Higher = higher rank on all three indicators.</p>
+            </div>
+            <div class="panel-section panel-section-list">
+                <div class="list-header">Country list (click to highlight)</div>
+                <div class="table-wrap">
+                    <table class="data-table" id="dataTable">
+                        <thead><tr id="tableHead"></tr></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="panel-center">
+            <div class="charts-row">
+                <div class="charts-bar-row">
+                    <div class="chart-card">
+                        <h3>Composite score</h3>
+                        <div class="chart-container"><canvas id="chartRank"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Count (agglos)</h3>
+                        <div class="chart-container"><canvas id="chartCount"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Population</h3>
+                        <div class="chart-container"><canvas id="chartPopulation"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Area (km²)</h3>
+                        <div class="chart-container"><canvas id="chartArea"></canvas></div>
+                    </div>
+                </div>
+                <div class="chart-card chart-card-bubble">
+                    <div class="chart-card-header">
+                        <h3>Count vs Population (bubble = area)</h3>
+                        <div class="chart-toolbar" id="bubbleChartToolbar">
+                            <button type="button" class="chart-toolbar-btn" id="bubbleZoomBtn" title="Zoom (drag to select area)"><svg class="chart-toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg></button>
+                            <button type="button" class="chart-toolbar-btn active" id="bubblePanBtn" title="Pan (drag to move)"><svg class="chart-toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l-3 3 3 3"/><path d="M9 5l3-3 3 3"/><path d="M15 19l-3 3-3-3"/><path d="M19 9l3 3-3 3"/><path d="M2 12h20"/><path d="M12 2v20"/></svg></button>
+                            <button type="button" class="chart-toolbar-btn" id="bubbleBoxSelectBtn" title="Box select (drag to select countries, highlight in list and charts)"><svg class="chart-toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2"><rect x="3" y="3" width="18" height="18" rx="1"/></svg></button>
+                            <button type="button" class="chart-toolbar-btn" id="bubbleHomeBtn" title="Reset zoom"><svg class="chart-toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
+                        </div>
+                    </div>
+                    <div class="chart-container chart-container-bubble" id="bubbleChartContainer">
+                        <div class="selection-rect" id="bubbleSelectionRect"></div>
+                        <canvas id="chartScatter"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const ISO_TO_COUNTRY = { DZA: 'Algeria', AGO: 'Angola', BEN: 'Benin', BWA: 'Botswana', BFA: 'Burkina Faso', BDI: 'Burundi', CMR: 'Cameroon', CPV: 'Cape Verde', CAF: 'Central African Republic', TCD: 'Chad', COM: 'Comoros', COG: 'Congo', COD: 'DR Congo', CIV: 'Côte d\'Ivoire', DJI: 'Djibouti', EGY: 'Egypt', GNQ: 'Equatorial Guinea', ERI: 'Eritrea', SWZ: 'Eswatini', ETH: 'Ethiopia', GAB: 'Gabon', GMB: 'Gambia', GHA: 'Ghana', GIN: 'Guinea', GNB: 'Guinea-Bissau', KEN: 'Kenya', LSO: 'Lesotho', LBR: 'Liberia', LBY: 'Libya', MDG: 'Madagascar', MWI: 'Malawi', MLI: 'Mali', MRT: 'Mauritania', MUS: 'Mauritius', MAR: 'Morocco', MOZ: 'Mozambique', NAM: 'Namibia', NER: 'Niger', NGA: 'Nigeria', RWA: 'Rwanda', STP: 'São Tomé and Príncipe', SEN: 'Senegal', SYC: 'Seychelles', SLE: 'Sierra Leone', SOM: 'Somalia', ZAF: 'South Africa', SSD: 'South Sudan', SDN: 'Sudan', TZA: 'Tanzania', TGO: 'Togo', TUN: 'Tunisia', UGA: 'Uganda', ESH: 'Western Sahara', ZMB: 'Zambia', ZWE: 'Zimbabwe' };
+
+        function getISOFromCountryField(val) {
+            if (!val) return null;
+            const s = String(val).trim();
+            if (s.length === 3 && /^[A-Z]{3}$/i.test(s)) return s.toUpperCase();
+            const entry = Object.entries(ISO_TO_COUNTRY).find(([iso, name]) => name === s);
+            return entry ? entry[0] : null;
+        }
+
+        function getAllCountryIsos() {
+            return Object.keys(ISO_TO_COUNTRY).sort();
+        }
+
+        function getCountryDisplayName(isoOrName) {
+            if (!isoOrName) return '';
+            const s = String(isoOrName).trim();
+            if (s.length === 3 && /^[A-Z]{3}$/i.test(s)) return ISO_TO_COUNTRY[s.toUpperCase()] || s;
+            return s;
+        }
+
+        let workbookData = null;
+        let countryData = [];
+        let filteredData = [];
+        let charts = {};
+        let currentChartData = [];  // data currently shown in charts (for click handlers after update)
+        let bubbleChartMode = 'pan';  // 'pan' | 'zoom' | 'boxSelect'
+        let boxSelectStart = null;    // { x, y } in pixel when drag starts
+        /* Palette aligned with index.html map/chart: M=#5B8FA3, L=#D4A574, S=#6B9B8A, Total=#8B9A9F */
+        const barColor = 'rgba(91, 143, 163, 0.7)';
+        const barBorder = '#5B8FA3';
+        const barHighlightColor = 'rgba(212, 165, 116, 0.85)';
+        const barHighlightBorder = '#D4A574';
+        let selectedCountries = new Set();  // country codes, multi-select
+        const parseNum = (v) => {
+            if (v == null || v === '') return 0;
+            const s = String(v).replace(/,/g, '');
+            return Number(s) || 0;
+        };
+
+        function getCountryType(country) {
+            const regions = ['North Africa', 'West Africa', 'Central Africa', 'East Africa', 'Southern Africa'];
+            const orgs = ['Arab Maghreb Union', 'Common Market of Eastern and Southern Africa', 'Community of Sahel-Saharan States', 'East African Community', 'Economic Community of Central African States', 'Economic Community of West African States', 'Intergovernmental Authority on Development', 'Southern African Development Community', 'West African Economic and Monetary Union'];
+            if (!country) return 'other';
+            if (country === 'Africa') return 'other';
+            if (regions.includes(country)) return 'other';
+            if (orgs.includes(country)) return 'other';
+            return 'country';
+        }
+
+        function loadData() {
+            document.getElementById('tableBody').innerHTML = '<tr><td colspan="5" class="loading">Loading data...</td></tr>';
+            fetch('./urban_metrics_results_100k_1000k.xlsx')
+                .then(r => r.blob())
+                .then(blob => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                        workbookData = {};
+                        wb.SheetNames.forEach(name => {
+                            const ws = wb.Sheets[name];
+                            workbookData[name] = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                        });
+                        buildCountryData();
+                    };
+                    reader.readAsArrayBuffer(blob);
+                })
+                .catch(() => {
+                    document.getElementById('tableBody').innerHTML = '<tr><td colspan="5" class="empty-state">Failed to load workbook.</td></tr>';
+                });
+        }
+
+        function getMetricColumns(sheet, metric) {
+            const key = metric === 'fusion' ? 'fusion' : 'absorb';
+            const rows = workbookData[sheet] || [];
+            if (!rows.length) return { count: [], population: [], area: [] };
+            const allKeys = Object.keys(rows[0]);
+            const count = allKeys.filter(c => c.toLowerCase().includes(key) && (c.toLowerCase().includes('count') || c.toLowerCase().includes('agglos')));
+            const population = allKeys.filter(c => c.toLowerCase().includes(key) && c.toLowerCase().includes('population'));
+            const area = allKeys.filter(c => c.toLowerCase().includes(key) && c.toLowerCase().includes('area'));
+            return { count, population, area };
+        }
+
+        function pickBestColumn(arr) {
+            if (!arr || !arr.length) return null;
+            const with2050 = arr.filter(c => String(c).includes('2050'));
+            if (with2050.length) return with2050[with2050.length - 1];
+            return arr[arr.length - 1];
+        }
+
+        function buildCountryData() {
+            const sheet = 'Fixed_Mode';
+            const metric = document.getElementById('metricType').value;
+            const cols = getMetricColumns(sheet, metric);
+            const countCol = pickBestColumn(cols.count);
+            const popCol = pickBestColumn(cols.population);
+            const areaCol = pickBestColumn(cols.area);
+
+            const allIsos = getAllCountryIsos();
+            const byIso = {};
+            allIsos.forEach(iso => {
+                byIso[iso] = {
+                    country: iso,
+                    countryName: ISO_TO_COUNTRY[iso],
+                    count: 0,
+                    population: 0,
+                    area: 0,
+                    hasTotal: false
+                };
+            });
+
+            const rows = workbookData[sheet] || [];
+            rows.forEach(row => {
+                const iso = getISOFromCountryField(row.Country);
+                if (!iso || !byIso[iso]) return;
+                const sc = (row.Size_Class || '').toString();
+                const isTotal = /total/i.test(sc);
+                if (isTotal) {
+                    byIso[iso].count = parseNum(row[countCol]);
+                    byIso[iso].population = parseNum(row[popCol]);
+                    byIso[iso].area = parseNum(row[areaCol]);
+                    byIso[iso].hasTotal = true;
+                } else if (!byIso[iso].hasTotal) {
+                    byIso[iso].count += parseNum(row[countCol]);
+                    byIso[iso].population += parseNum(row[popCol]);
+                    byIso[iso].area += parseNum(row[areaCol]);
+                }
+            });
+
+            countryData = allIsos.map(iso => byIso[iso]);
+            const n = countryData.length;
+            const rankCount = [...countryData].sort((a, b) => b.count - a.count);
+            const rankPop = [...countryData].sort((a, b) => b.population - a.population);
+            const rankArea = [...countryData].sort((a, b) => b.area - a.area);
+            const rankMap = (arr) => {
+                const order = {};
+                arr.forEach((r, i) => { order[r.country] = i; });
+                return order;
+            };
+            const rc = rankMap(rankCount);
+            const rp = rankMap(rankPop);
+            const ra = rankMap(rankArea);
+            countryData.forEach(d => {
+                const r1 = n ? 1 - (rc[d.country] ?? n - 1) / n : 0;
+                const r2 = n ? 1 - (rp[d.country] ?? n - 1) / n : 0;
+                const r3 = n ? 1 - (ra[d.country] ?? n - 1) / n : 0;
+                d.score = (r1 + r2 + r3) / 3;
+            });
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const q = (document.getElementById('searchCountry').value || '').trim().toLowerCase();
+            const sortKey = document.getElementById('sortBy').value;
+            filteredData = countryData.filter(d => {
+                if (!q) return true;
+                const name = (d.countryName || getCountryDisplayName(d.country) || d.country || '').toLowerCase();
+                const code = (d.country || '').toLowerCase();
+                return name.includes(q) || code.includes(q);
+            });
+            filteredData.sort((a, b) => {
+                let va = a[sortKey], vb = b[sortKey];
+                if (sortKey === 'score') return vb - va;
+                return (vb || 0) - (va || 0);
+            });
+            const topN = Math.min(parseInt(document.getElementById('topN').value, 10) || 999, filteredData.length);
+            const forCharts = filteredData.slice(0, topN);
+            renderTable(forCharts);
+            renderCharts(forCharts);
+        }
+
+        function renderTable(rows) {
+            const thead = document.getElementById('tableHead');
+            const tbody = document.getElementById('tableBody');
+            thead.innerHTML = '<th data-sort="country">Ctry</th><th data-sort="count" class="num">Count</th><th data-sort="population" class="num">Pop</th><th data-sort="area" class="num">Area (km²)</th><th data-sort="score" class="num">Score</th>';
+            if (!rows.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No data</td></tr>';
+                return;
+            }
+            const maxScore = Math.max(...rows.map(r => r.score), 0.001);
+            tbody.innerHTML = rows.map((r, i) => {
+                const safe = (s) => String(s || '').replace(/"/g, '&quot;');
+                const name = r.countryName || getCountryDisplayName(r.country) || r.country;
+                return `
+                <tr data-country="${safe(r.country)}" data-index="${i}">
+                    <td>${name}</td>
+                    <td class="num">${Math.round(r.count).toLocaleString()}</td>
+                    <td class="num">${Math.round(r.population).toLocaleString()}</td>
+                    <td class="num">${Math.round(r.area).toLocaleString()}</td>
+                    <td class="num"><div class="score-bar"><div class="score-bar-fill" style="width:${(r.score / maxScore * 100).toFixed(0)}%"></div></div> ${r.score.toFixed(2)}</td>
+                </tr>
+            `}).join('');
+
+            document.querySelectorAll('#dataTable th[data-sort]').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+                th.onclick = () => {
+                    const key = th.dataset.sort;
+                    const asc = th.classList.contains('sorted-desc');
+                    filteredData.sort((a, b) => {
+                        let va = a[key], vb = b[key];
+                        if (key === 'country') return asc ? (va || '').localeCompare(vb || '') : (vb || '').localeCompare(va || '');
+                        if (key === 'score') return asc ? va - vb : vb - va;
+                        return asc ? (va || 0) - (vb || 0) : (vb || 0) - (va || 0);
+                    });
+                    document.getElementById('sortBy').value = key;
+                    const topN = Math.min(parseInt(document.getElementById('topN').value, 10) || 999, filteredData.length);
+                    const forCharts = filteredData.slice(0, topN);
+                    renderTable(forCharts);
+                    renderCharts(forCharts);
+                    th.classList.toggle('sorted-asc', asc);
+                    th.classList.toggle('sorted-desc', !asc);
+                };
+            });
+
+            applyHighlightToTable();
+            tbody.querySelectorAll('tr').forEach(tr => {
+                tr.addEventListener('click', (e) => {
+                    const country = tr.dataset.country;
+                    if (!country) return;
+                    if (selectedCountries.has(country)) selectedCountries.delete(country);
+                    else selectedCountries.add(country);
+                    applyHighlightToTable();
+                    applyHighlightToCharts();
+                });
+            });
+        }
+
+        function applyHighlightToTable() {
+            document.querySelectorAll('#tableBody tr[data-country]').forEach(tr => {
+                tr.classList.toggle('highlighted', selectedCountries.has(tr.dataset.country));
+            });
+        }
+
+        function applyHighlightToCharts() {
+            const data = currentChartData;
+            if (!data.length || !charts.rank) return;
+            const bg = data.map(d => selectedCountries.has(d.country) ? barHighlightColor : barColor);
+            const border = data.map(d => selectedCountries.has(d.country) ? barHighlightBorder : barBorder);
+            [charts.rank, charts.count, charts.population, charts.area].forEach(ch => {
+                if (ch && ch.data && ch.data.datasets && ch.data.datasets[0]) {
+                    ch.data.datasets[0].backgroundColor = bg;
+                    ch.data.datasets[0].borderColor = border;
+                    ch.update('none');
+                }
+            });
+            if (charts.scatter && charts.scatter.data.datasets[0]) {
+                charts.scatter.data.datasets[0].backgroundColor = bg;
+                charts.scatter.data.datasets[0].borderColor = border;
+                charts.scatter.update('none');
+            }
+        }
+
+        function barChartOnClick(ev, els) {
+            const data = currentChartData;
+            if (!els.length || !data || !data[els[0].index]) return;
+            const country = data[els[0].index].country;
+            if (selectedCountries.has(country)) selectedCountries.delete(country);
+            else selectedCountries.add(country);
+            applyHighlightToTable();
+            applyHighlightToCharts();
+            const row = document.querySelector(`#tableBody tr[data-country="${(country || '').replace(/"/g, '&quot;')}"]`);
+            if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+
+        const BUBBLE_LABEL_TOP_N = 12;
+        const bubbleCountryLabelsPlugin = {
+            id: 'bubbleCountryLabels',
+            afterDraw(chart) {
+                const meta = chart._bubbleLabelData;
+                if (!meta || !meta.currentChartData || !meta.topN) return;
+                const data = meta.currentChartData;
+                const topN = meta.topN;
+                const indices = data
+                    .map((d, i) => ({ i, score: d.score != null ? d.score : 0 }))
+                    .sort((a, b) => b.score - a.score)
+                    .slice(0, topN)
+                    .map(x => x.i);
+                const elements = chart.getDatasetMeta(0).data;
+                const ctx = chart.ctx;
+                const paddingH = 5;
+                const paddingV = 2;
+                const gap = 6;
+                const radius = 4;
+                const font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.save();
+                ctx.font = font;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                indices.forEach((idx, i) => {
+                    const el = elements[idx];
+                    if (!el || el.x == null) return;
+                    const d = data[idx];
+                    const name = d.countryName || getCountryDisplayName(d.country) || d.country || '';
+                    if (!name) return;
+                    const tw = ctx.measureText(name).width;
+                    const boxW = tw + paddingH * 2;
+                    const boxH = 10 + paddingV * 2;
+                    const offsetY = (i % 3 - 1) * 5;
+                    const labelX = el.x + gap;
+                    const boxX = labelX - paddingH;
+                    const textY = el.y + offsetY;
+                    const boxY = textY - boxH / 2;
+                    if (typeof ctx.roundRect === 'function') {
+                        ctx.beginPath();
+                        ctx.roundRect(boxX, boxY, boxW, boxH, radius);
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+                        ctx.fill();
+                        ctx.strokeStyle = 'rgba(232, 230, 225, 0.5)';
+                        ctx.lineWidth = 0.8;
+                        ctx.stroke();
+                    } else {
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+                        ctx.strokeStyle = 'rgba(232, 230, 225, 0.5)';
+                        ctx.lineWidth = 0.8;
+                        ctx.beginPath();
+                        const r = Math.min(radius, boxH / 2);
+                        ctx.moveTo(boxX + r, boxY);
+                        ctx.lineTo(boxX + boxW - r, boxY);
+                        ctx.quadraticCurveTo(boxX + boxW, boxY, boxX + boxW, boxY + r);
+                        ctx.lineTo(boxX + boxW, boxY + boxH - r);
+                        ctx.quadraticCurveTo(boxX + boxW, boxY + boxH, boxX + boxW - r, boxY + boxH);
+                        ctx.lineTo(boxX + r, boxY + boxH);
+                        ctx.quadraticCurveTo(boxX, boxY + boxH, boxX, boxY + boxH - r);
+                        ctx.lineTo(boxX, boxY + r);
+                        ctx.quadraticCurveTo(boxX, boxY, boxX + r, boxY);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.stroke();
+                    }
+                    ctx.fillStyle = 'rgba(44, 62, 80, 0.78)';
+                    ctx.fillText(name, labelX, textY);
+                });
+                ctx.restore();
+            }
+        };
+        if (typeof Chart !== 'undefined') {
+            Chart.register(bubbleCountryLabelsPlugin);
+        }
+        function renderCharts(data) {
+            const metric = document.getElementById('metricType').value;
+            const label = metric === 'fusion' ? 'Fusion' : 'Absorb';
+            const labels = data.map(d => d.countryName || getCountryDisplayName(d.country) || d.country);
+            const scores = data.map(d => d.score);
+            const counts = data.map(d => d.count);
+            const pops = data.map(d => d.population);
+            const areas = data.map(d => d.area);
+
+            // Fixed scale from full dataset so bar lengths stay comparable when sort/filter changes
+            const scaleMaxCount = countryData.length ? Math.max(...countryData.map(d => d.count), 1) : 1;
+            const scaleMaxPop = countryData.length ? Math.max(...countryData.map(d => d.population), 1) : 1;
+            const scaleMaxArea = countryData.length ? Math.max(...countryData.map(d => d.area), 1) : 1;
+
+            const maxArea = Math.max(...areas, 1);
+            const radii = areas.map(a => 5 + 25 * Math.sqrt(a / maxArea));
+            const bubbleData = counts.map((c, i) => ({ x: c, y: pops[i], r: radii[i] }));
+
+            currentChartData = data;
+
+            // Update existing charts so bars/bubbles animate (no full redraw)
+            if (charts.rank) {
+                charts.rank.data.labels = labels;
+                charts.rank.data.datasets[0].data = scores;
+                charts.rank.options.scales.x.max = 1;
+                charts.rank.update();
+
+                charts.count.data.labels = labels;
+                charts.count.data.datasets[0].data = counts;
+                charts.count.options.scales.x.max = scaleMaxCount;
+                charts.count.update();
+
+                charts.population.data.labels = labels;
+                charts.population.data.datasets[0].data = pops;
+                charts.population.options.scales.x.max = scaleMaxPop;
+                charts.population.update();
+
+                charts.area.data.labels = labels;
+                charts.area.data.datasets[0].data = areas;
+                charts.area.options.scales.x.max = scaleMaxArea;
+                charts.area.update();
+
+                charts.scatter.data.datasets[0].data = bubbleData;
+                charts.scatter.options.scales.x.title.text = `${label} count (agglos)`;
+                charts.scatter.options.scales.y.title.text = `${label} population`;
+                charts.scatter._bubbleLabelData = { currentChartData: data, topN: BUBBLE_LABEL_TOP_N };
+                charts.scatter.update();
+                applyHighlightToCharts();
+                return;
+            }
+
+            const barOpt = (title, values, fmt, xMax) => ({
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: (c) => `${title}: ${fmt(c.raw)}` } }
+                },
+                scales: {
+                    x: { min: 0, max: xMax, beginAtZero: true },
+                    y: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 20 } }
+                },
+                onClick: (ev, els) => barChartOnClick(ev, els)
+            });
+
+            charts.rank = new Chart(document.getElementById('chartRank').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Score',
+                        data: scores,
+                        backgroundColor: barColor,
+                        borderColor: barBorder,
+                        borderWidth: 1
+                    }]
+                },
+                options: barOpt('Score', scores, v => v.toFixed(2), 1)
+            });
+
+            charts.count = new Chart(document.getElementById('chartCount').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Count',
+                        data: counts,
+                        backgroundColor: barColor,
+                        borderColor: barBorder,
+                        borderWidth: 1
+                    }]
+                },
+                options: barOpt('Count', counts, v => Math.round(v).toLocaleString(), scaleMaxCount)
+            });
+
+            charts.population = new Chart(document.getElementById('chartPopulation').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Population',
+                        data: pops,
+                        backgroundColor: barColor,
+                        borderColor: barBorder,
+                        borderWidth: 1
+                    }]
+                },
+                options: barOpt('Population', pops, v => Math.round(v).toLocaleString(), scaleMaxPop)
+            });
+
+            charts.area = new Chart(document.getElementById('chartArea').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Area',
+                        data: areas,
+                        backgroundColor: barColor,
+                        borderColor: barBorder,
+                        borderWidth: 1
+                    }]
+                },
+                options: barOpt('Area (km²)', areas, v => Math.round(v).toLocaleString(), scaleMaxArea)
+            });
+
+            applyHighlightToCharts();
+
+            const ctxScatter = document.getElementById('chartScatter').getContext('2d');
+            const zoomPlugin = typeof Chart !== 'undefined' && Chart.registry && Chart.registry.getPlugin('zoom');
+            charts.scatter = new Chart(ctxScatter, {
+                type: 'bubble',
+                data: {
+                    datasets: [{
+                        label: 'Countries',
+                        data: bubbleData,
+                        backgroundColor: 'rgba(91, 143, 163, 0.5)',
+                        borderColor: '#5B8FA3',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    const i = ctx.dataIndex;
+                                    const d = currentChartData[i];
+                                    if (!d) return [];
+                                    const countryName = d.countryName || getCountryDisplayName(d.country) || d.country;
+                                    return [countryName, `Count: ${(d.count || 0).toLocaleString()}`, `Population: ${(d.population || 0).toLocaleString()}`, `Area: ${(d.area || 0).toLocaleString()} km²`];
+                                }
+                            }
+                        },
+                        zoom: zoomPlugin ? {
+                            zoom: {
+                                wheel: { enabled: true },
+                                pinch: { enabled: true },
+                                drag: { enabled: false },
+                                mode: 'xy'
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'xy'
+                            },
+                            limits: {
+                                x: { min: 'original', max: 'original' },
+                                y: { min: 'original', max: 'original' }
+                            }
+                        } : {}
+                    },
+                    scales: {
+                        x: { title: { display: true, text: `${label} count (agglos)` } },
+                        y: { title: { display: true, text: `${label} population` } }
+                    },
+                    onClick: (ev, els) => {
+                        if (bubbleChartMode === 'boxSelect') return;
+                        if (!els.length) return;
+                        const i = els[0].index;
+                        const d = currentChartData[i];
+                        if (!d) return;
+                        const country = d.country;
+                        if (selectedCountries.has(country)) selectedCountries.delete(country);
+                        else selectedCountries.add(country);
+                        applyHighlightToTable();
+                        applyHighlightToCharts();
+                        const row = document.querySelector(`#tableBody tr[data-country="${(country || '').replace(/"/g, '&quot;')}"]`);
+                        if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    }
+                }
+            });
+            charts.scatter._bubbleLabelData = { currentChartData: data, topN: BUBBLE_LABEL_TOP_N };
+
+            const zoomBtn = document.getElementById('bubbleZoomBtn');
+            const panBtn = document.getElementById('bubblePanBtn');
+            const boxSelectBtn = document.getElementById('bubbleBoxSelectBtn');
+            const homeBtn = document.getElementById('bubbleHomeBtn');
+            const scatterCanvas = document.getElementById('chartScatter');
+            const selectionRect = document.getElementById('bubbleSelectionRect');
+
+            function setBubbleMode(mode) {
+                bubbleChartMode = mode;
+                zoomBtn.classList.toggle('active', mode === 'zoom');
+                panBtn.classList.toggle('active', mode === 'pan');
+                if (boxSelectBtn) boxSelectBtn.classList.toggle('active', mode === 'boxSelect');
+                if (charts.scatter && charts.scatter.options.plugins.zoom) {
+                    const z = charts.scatter.options.plugins.zoom;
+                    z.zoom.drag.enabled = (mode === 'zoom');
+                    z.pan.enabled = (mode === 'pan');
+                    charts.scatter.update('none');
+                }
+            }
+
+            if (zoomBtn) zoomBtn.addEventListener('click', () => setBubbleMode('zoom'));
+            if (panBtn) panBtn.addEventListener('click', () => setBubbleMode('pan'));
+            if (boxSelectBtn) boxSelectBtn.addEventListener('click', () => setBubbleMode('boxSelect'));
+            if (homeBtn) homeBtn.addEventListener('click', () => {
+                if (charts.scatter && typeof charts.scatter.resetZoom === 'function') {
+                    charts.scatter.resetZoom();
+                    zoomBtn.classList.remove('active');
+                    panBtn.classList.remove('active');
+                    if (boxSelectBtn) boxSelectBtn.classList.remove('active');
+                    bubbleChartMode = 'pan';
+                    panBtn.classList.add('active');
+                }
+            });
+
+            if (scatterCanvas && selectionRect && !window.bubbleBoxSelectListenersAttached) {
+                window.bubbleBoxSelectListenersAttached = true;
+                scatterCanvas.addEventListener('mousedown', (e) => {
+                    if (bubbleChartMode !== 'boxSelect' || !charts.scatter) return;
+                    const rect = scatterCanvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    boxSelectStart = { x, y };
+                    selectionRect.style.left = x + 'px';
+                    selectionRect.style.top = y + 'px';
+                    selectionRect.style.width = '0';
+                    selectionRect.style.height = '0';
+                    selectionRect.classList.add('visible');
+                });
+                scatterCanvas.addEventListener('mousemove', (e) => {
+                    if (!boxSelectStart || !charts.scatter) return;
+                    const rect = scatterCanvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const left = Math.min(boxSelectStart.x, x);
+                    const top = Math.min(boxSelectStart.y, y);
+                    const width = Math.abs(x - boxSelectStart.x);
+                    const height = Math.abs(y - boxSelectStart.y);
+                    selectionRect.style.left = left + 'px';
+                    selectionRect.style.top = top + 'px';
+                    selectionRect.style.width = width + 'px';
+                    selectionRect.style.height = height + 'px';
+                });
+                scatterCanvas.addEventListener('mouseup', (e) => {
+                    if (!boxSelectStart || !charts.scatter) return;
+                    const rect = scatterCanvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const left = Math.min(boxSelectStart.x, x);
+                    const top = Math.min(boxSelectStart.y, y);
+                    const width = Math.abs(x - boxSelectStart.x);
+                    const height = Math.abs(y - boxSelectStart.y);
+                    selectionRect.classList.remove('visible');
+                    boxSelectStart = null;
+
+                    if (width < 4 && height < 4) return;
+                    const xScale = charts.scatter.scales.x;
+                    const yScale = charts.scatter.scales.y;
+                    if (!xScale || !yScale) return;
+                    const xMin = xScale.getValueForPixel(left);
+                    const xMax = xScale.getValueForPixel(left + width);
+                    const yMin = yScale.getValueForPixel(top + height);
+                    const yMax = yScale.getValueForPixel(top);
+                    const dataMinX = Math.min(xMin, xMax);
+                    const dataMaxX = Math.max(xMin, xMax);
+                    const dataMinY = Math.min(yMin, yMax);
+                    const dataMaxY = Math.max(yMin, yMax);
+
+                    selectedCountries.clear();
+                    currentChartData.forEach((d, i) => {
+                        const bx = (d.count != null) ? d.count : 0;
+                        const by = (d.population != null) ? d.population : 0;
+                        if (bx >= dataMinX && bx <= dataMaxX && by >= dataMinY && by <= dataMaxY) {
+                            selectedCountries.add(d.country);
+                        }
+                    });
+                    applyHighlightToTable();
+                    applyHighlightToCharts();
+                });
+                scatterCanvas.addEventListener('mouseleave', () => {
+                    if (boxSelectStart) {
+                        selectionRect.classList.remove('visible');
+                        boxSelectStart = null;
+                    }
+                });
+            }
+        }
+
+        document.getElementById('metricType').addEventListener('change', () => { buildCountryData(); });
+        document.getElementById('searchCountry').addEventListener('input', () => { applyFilters(); });
+        document.getElementById('sortBy').addEventListener('change', () => { applyFilters(); });
+        document.getElementById('topN').addEventListener('change', () => { applyFilters(); });
+        document.getElementById('clearSelection').addEventListener('click', () => {
+            selectedCountries.clear();
+            applyHighlightToTable();
+            applyHighlightToCharts();
+        });
+
+        loadData();
+    </script>
+</body>
+</html>
