@@ -156,6 +156,59 @@
             border-radius: 6px;
             border: 1px solid #E8E6E1;
         }
+        .column-toggles {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 14px;
+            align-items: center;
+        }
+        .column-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: #2C3E50;
+            cursor: pointer;
+        }
+        .column-toggle input { cursor: pointer; }
+        .collapse-section {
+            border-bottom: 1px solid #F0EEEA;
+        }
+        .collapse-section:last-of-type {
+            border-bottom: none;
+        }
+        .collapse-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #6B7A8A;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            user-select: none;
+            background: #FAFBFC;
+        }
+        .collapse-header:hover {
+            color: #5B8FA3;
+            background: #F5F7F8;
+        }
+        .collapse-header .collapse-icon {
+            font-size: 10px;
+            color: #6B7A8A;
+            transition: transform 0.15s ease;
+        }
+        .collapse-section.collapsed .collapse-icon {
+            transform: rotate(-90deg);
+        }
+        .collapse-body {
+            padding: 8px 14px 12px;
+        }
+        .collapse-section.collapsed .collapse-body {
+            display: none;
+        }
         .list-header {
             padding: 8px 8px;
             font-size: 11px;
@@ -195,15 +248,21 @@
             min-height: 0;
         }
         .charts-bar-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
+            display: flex;
+            flex-wrap: nowrap;
             gap: 10px;
             flex-shrink: 0;
             min-height: 300px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 6px;
+            -webkit-overflow-scrolling: touch;
         }
         .charts-bar-row .chart-card {
+            flex: 0 0 auto;
             min-height: 280px;
-            min-width: 200px;
+            min-width: 300px;
+            width: 300px;
         }
         .charts-bar-row .chart-container {
             min-height: 240px;
@@ -218,6 +277,26 @@
         .chart-container-bubble {
             position: relative;
         }
+        .bubble-tooltip {
+            position: absolute;
+            z-index: 100;
+            pointer-events: none;
+            display: none;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid #E8E6E1;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            font-size: 12px;
+            color: #2C3E50;
+            line-height: 1.4;
+            max-width: 280px;
+        }
+        .bubble-tooltip.visible {
+            display: block;
+        }
+        .bubble-tooltip .tt-title { font-weight: 600; margin-bottom: 4px; }
+        .bubble-tooltip .tt-body { white-space: pre-line; }
         .selection-rect {
             position: absolute;
             border: 2px dashed #6B9B8A;
@@ -341,46 +420,75 @@
     </div>
     <div class="main">
         <div class="panel-left">
-            <div class="panel-section panel-section-filters">
-                <div class="panel-title">Filters</div>
-                <div class="filter-group">
-                    <div class="filter-row">
-                        <label>Metric</label>
-                        <select id="metricType">
-                            <option value="fusion">Fusion</option>
-                            <option value="absorb">Absorb</option>
-                        </select>
-                    </div>
-                    <div class="filter-row">
-                        <label>Search</label>
-                        <input type="text" id="searchCountry" placeholder="Country name...">
-                    </div>
-                    <div class="filter-row">
-                        <label>Sort by</label>
-                        <select id="sortBy">
-                            <option value="score">Composite score</option>
-                            <option value="count">Count (agglos)</option>
-                            <option value="population">Population</option>
-                            <option value="area">Area (km²)</option>
-                        </select>
-                    </div>
-                    <div class="filter-row">
-                        <label>Top N</label>
-                        <select id="topN">
-                            <option value="999" selected>All</option>
-                            <option value="10">10</option>
-                            <option value="15">15</option>
-                            <option value="20">20</option>
-                            <option value="30">30</option>
-                            <option value="42">42</option>
-                        </select>
-                    </div>
-                    <div class="filter-row filter-row-button">
-                        <button type="button" id="clearSelection">Clear selection</button>
+            <div class="collapse-section" id="collapseFilters">
+                <div class="collapse-header" aria-expanded="true">
+                    <span>Filters</span>
+                    <span class="collapse-icon" aria-hidden="true">▼</span>
+                </div>
+                <div class="collapse-body">
+                    <div class="filter-group">
+                        <div class="filter-row">
+                            <label>Metric</label>
+                            <select id="metricType">
+                                <option value="fusion">Fusion</option>
+                                <option value="absorb">Absorb</option>
+                            </select>
+                        </div>
+                        <div class="filter-row">
+                            <label>Search</label>
+                            <input type="text" id="searchCountry" placeholder="Country name...">
+                        </div>
+                        <div class="filter-row">
+                            <label>Sort by</label>
+                            <select id="sortBy">
+                                <option value="score">Composite score</option>
+                                <option value="sharePop">Pop %</option>
+                                <option value="shareArea">Area %</option>
+                                <option value="count">Count (agglos)</option>
+                                <option value="population">Population</option>
+                                <option value="area">Area (km²)</option>
+                            </select>
+                        </div>
+                        <div class="filter-row">
+                            <label>Top N</label>
+                            <select id="topN">
+                                <option value="999" selected>All</option>
+                                <option value="10">10</option>
+                                <option value="15">15</option>
+                                <option value="20">20</option>
+                                <option value="30">30</option>
+                                <option value="42">42</option>
+                            </select>
+                        </div>
+                        <div class="filter-row filter-row-button">
+                            <button type="button" id="clearSelection">Clear selection</button>
+                        </div>
                     </div>
                 </div>
-                <div class="panel-title" style="margin-top: 14px;">Score</div>
-                <p class="score-desc">Composite index (0–1): equal-weight average of normalized ranks on # agglomerations fused, population involved, and area involved. Higher = higher rank on all three indicators.</p>
+            </div>
+            <div class="collapse-section collapsed" id="collapseListCols">
+                <div class="collapse-header" aria-expanded="false">
+                    <span>List columns</span>
+                    <span class="collapse-icon" aria-hidden="true">▼</span>
+                </div>
+                <div class="collapse-body">
+                    <div class="column-toggles" aria-label="Choose which columns to show in the country list">
+                        <label class="column-toggle"><input type="checkbox" id="colCount"> Count</label>
+                        <label class="column-toggle"><input type="checkbox" id="colArea"> Area</label>
+                        <label class="column-toggle"><input type="checkbox" id="colPop"> Pop</label>
+                    </div>
+                    <p class="score-desc" style="margin-top: 8px;">Ctry, Pop %, Area %, Score always shown. Tick to add Count / Pop / Area.</p>
+                </div>
+            </div>
+            <div class="collapse-section collapsed" id="collapseScore">
+                <div class="collapse-header" aria-expanded="false">
+                    <span>About the index</span>
+                    <span class="collapse-icon" aria-hidden="true">▼</span>
+                </div>
+                <div class="collapse-body">
+                    <p class="score-desc">Composite index (0–1): equal-weight average of normalized ranks on # agglomerations fused, population involved, and area involved. Higher = higher rank on all three indicators.</p>
+                    <p class="score-desc" style="margin-top: 6px;">Pop %: fusion/absorb population as % of country total population. Area %: fusion/absorb area as % of country total area. Higher = fusion/absorb matters more for that country.</p>
+                </div>
             </div>
             <div class="panel-section panel-section-list">
                 <div class="list-header">Country list (click to highlight)</div>
@@ -411,10 +519,18 @@
                         <h3>Area (km²)</h3>
                         <div class="chart-container"><canvas id="chartArea"></canvas></div>
                     </div>
+                    <div class="chart-card">
+                        <h3>Pop %</h3>
+                        <div class="chart-container"><canvas id="chartSharePop"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Area %</h3>
+                        <div class="chart-container"><canvas id="chartShareArea"></canvas></div>
+                    </div>
                 </div>
                 <div class="chart-card chart-card-bubble">
                     <div class="chart-card-header">
-                        <h3>Count vs Population (bubble = area)</h3>
+                        <h3 id="bubbleChartTitle">Score vs Count (pie = area%, size = area, color = pop%)</h3>
                         <div class="chart-toolbar" id="bubbleChartToolbar">
                             <button type="button" class="chart-toolbar-btn" id="bubbleZoomBtn" title="Zoom (drag to select area)"><svg class="chart-toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg></button>
                             <button type="button" class="chart-toolbar-btn active" id="bubblePanBtn" title="Pan (drag to move)"><svg class="chart-toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l-3 3 3 3"/><path d="M9 5l3-3 3 3"/><path d="M15 19l-3 3-3-3"/><path d="M19 9l3 3-3 3"/><path d="M2 12h20"/><path d="M12 2v20"/></svg></button>
@@ -425,6 +541,7 @@
                     <div class="chart-container chart-container-bubble" id="bubbleChartContainer">
                         <div class="selection-rect" id="bubbleSelectionRect"></div>
                         <canvas id="chartScatter"></canvas>
+                        <div id="bubbleTooltip" class="bubble-tooltip" aria-hidden="true"></div>
                     </div>
                 </div>
             </div>
@@ -482,7 +599,7 @@
         }
 
         function loadData() {
-            document.getElementById('tableBody').innerHTML = '<tr><td colspan="5" class="loading">Loading data...</td></tr>';
+            document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" class="loading">Loading data...</td></tr>';
             fetch('./urban_metrics_results_100k_1000k.xlsx')
                 .then(r => r.blob())
                 .then(blob => {
@@ -499,7 +616,7 @@
                     reader.readAsArrayBuffer(blob);
                 })
                 .catch(() => {
-                    document.getElementById('tableBody').innerHTML = '<tr><td colspan="5" class="empty-state">Failed to load workbook.</td></tr>';
+                    document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" class="empty-state">Failed to load workbook.</td></tr>';
                 });
         }
 
@@ -521,6 +638,29 @@
             return arr[arr.length - 1];
         }
 
+        function pickColumnForYear(arr, year) {
+            if (!arr || !arr.length) return null;
+            const withYear = arr.filter(c => String(c).includes(String(year)));
+            if (withYear.length) return withYear[withYear.length - 1];
+            return arr[arr.length - 1];
+        }
+
+        function getTotalColumns(sheet) {
+            const rows = workbookData[sheet] || [];
+            if (!rows.length) return { population: null, area: null };
+            const allKeys = Object.keys(rows[0]);
+            const noFusionAbsorb = (c) => {
+                const l = c.toLowerCase();
+                return !l.includes('fusion') && !l.includes('absorb');
+            };
+            const popCols = allKeys.filter(c => noFusionAbsorb(c) && (c.startsWith('Population_') || (c.toLowerCase().includes('population') && c.match(/\d{4}/))));
+            const areaCols = allKeys.filter(c => noFusionAbsorb(c) && (c.startsWith('Area_') || (c.toLowerCase().includes('area') && c.match(/\d{4}/))));
+            return {
+                population: pickColumnForYear(popCols, '2020'),
+                area: pickColumnForYear(areaCols, '2020')
+            };
+        }
+
         function buildCountryData() {
             const sheet = 'Fixed_Mode';
             const metric = document.getElementById('metricType').value;
@@ -528,6 +668,7 @@
             const countCol = pickBestColumn(cols.count);
             const popCol = pickBestColumn(cols.population);
             const areaCol = pickBestColumn(cols.area);
+            const totals = getTotalColumns(sheet);
 
             const allIsos = getAllCountryIsos();
             const byIso = {};
@@ -538,6 +679,8 @@
                     count: 0,
                     population: 0,
                     area: 0,
+                    totalPopulation: 0,
+                    totalArea: 0,
                     hasTotal: false
                 };
             });
@@ -552,11 +695,15 @@
                     byIso[iso].count = parseNum(row[countCol]);
                     byIso[iso].population = parseNum(row[popCol]);
                     byIso[iso].area = parseNum(row[areaCol]);
+                    if (totals.population) byIso[iso].totalPopulation = parseNum(row[totals.population]);
+                    if (totals.area) byIso[iso].totalArea = parseNum(row[totals.area]);
                     byIso[iso].hasTotal = true;
                 } else if (!byIso[iso].hasTotal) {
                     byIso[iso].count += parseNum(row[countCol]);
                     byIso[iso].population += parseNum(row[popCol]);
                     byIso[iso].area += parseNum(row[areaCol]);
+                    if (totals.population) byIso[iso].totalPopulation += parseNum(row[totals.population]);
+                    if (totals.area) byIso[iso].totalArea += parseNum(row[totals.area]);
                 }
             });
 
@@ -578,7 +725,39 @@
                 const r2 = n ? 1 - (rp[d.country] ?? n - 1) / n : 0;
                 const r3 = n ? 1 - (ra[d.country] ?? n - 1) / n : 0;
                 d.score = (r1 + r2 + r3) / 3;
+                d.sharePop = d.totalPopulation > 0 ? (d.population / d.totalPopulation) * 100 : null;
+                d.shareArea = d.totalArea > 0 ? (d.area / d.totalArea) * 100 : null;
             });
+            const zaf = countryData.find(d => d.country === 'ZAF');
+            if (zaf) {
+                console.log('South Africa (ZAF) – totalPopulation/totalArea use 2020 columns:', {
+                    country: zaf.country,
+                    countryName: zaf.countryName,
+                    count: zaf.count,
+                    population: zaf.population,
+                    area: zaf.area,
+                    totalPopulation: zaf.totalPopulation,
+                    totalArea: zaf.totalArea,
+                    sharePop: zaf.sharePop != null ? zaf.sharePop.toFixed(2) + '%' : null,
+                    shareArea: zaf.shareArea != null ? zaf.shareArea.toFixed(2) + '%' : null,
+                    score: zaf.score.toFixed(2)
+                });
+            }
+            const bdi = countryData.find(d => d.country === 'BDI');
+            if (bdi) {
+                console.log('Burundi (BDI) – totalPopulation/totalArea use 2020 columns:', {
+                    country: bdi.country,
+                    countryName: bdi.countryName,
+                    count: bdi.count,
+                    population: bdi.population,
+                    area: bdi.area,
+                    totalPopulation: bdi.totalPopulation,
+                    totalArea: bdi.totalArea,
+                    sharePop: bdi.sharePop != null ? bdi.sharePop.toFixed(2) + '%' : null,
+                    shareArea: bdi.shareArea != null ? bdi.shareArea.toFixed(2) + '%' : null,
+                    score: bdi.score.toFixed(2)
+                });
+            }
             applyFilters();
         }
 
@@ -594,6 +773,11 @@
             filteredData.sort((a, b) => {
                 let va = a[sortKey], vb = b[sortKey];
                 if (sortKey === 'score') return vb - va;
+                if (sortKey === 'sharePop' || sortKey === 'shareArea') {
+                    const na = va != null && Number.isFinite(va) ? va : -1;
+                    const nb = vb != null && Number.isFinite(vb) ? vb : -1;
+                    return nb - na;
+                }
                 return (vb || 0) - (va || 0);
             });
             const topN = Math.min(parseInt(document.getElementById('topN').value, 10) || 999, filteredData.length);
@@ -602,37 +786,65 @@
             renderCharts(forCharts);
         }
 
+        function getListColumnVisibility() {
+            return {
+                count: document.getElementById('colCount') && document.getElementById('colCount').checked,
+                pop: document.getElementById('colPop') && document.getElementById('colPop').checked,
+                area: document.getElementById('colArea') && document.getElementById('colArea').checked
+            };
+        }
+
         function renderTable(rows) {
             const thead = document.getElementById('tableHead');
             const tbody = document.getElementById('tableBody');
-            thead.innerHTML = '<th data-sort="country">Ctry</th><th data-sort="count" class="num">Count</th><th data-sort="population" class="num">Pop</th><th data-sort="area" class="num">Area (km²)</th><th data-sort="score" class="num">Score</th>';
+            const vis = getListColumnVisibility();
+            const cols = [
+                { key: 'country', label: 'Ctry', sort: null, num: false },
+                ...(vis.count ? [{ key: 'count', label: 'Count', sort: 'count', num: true }] : []),
+                ...(vis.area ? [{ key: 'area', label: 'Area (km²)', sort: 'area', num: true }] : []),
+                ...(vis.pop ? [{ key: 'population', label: 'Pop', sort: 'population', num: true }] : []),
+                { key: 'sharePop', label: 'Pop %', sort: 'sharePop', num: true, title: 'Fusion/absorb population as % of country total' },
+                { key: 'shareArea', label: 'Area %', sort: 'shareArea', num: true, title: 'Fusion/absorb area as % of country total' },
+                { key: 'score', label: 'Score', sort: 'score', num: true }
+            ];
+            thead.innerHTML = cols.map(c => `<th ${c.sort != null ? `data-sort="${c.sort}"` : ''} class="${c.num ? 'num' : ''}" ${c.title ? `title="${c.title}"` : ''}>${c.label}</th>`).join('');
             if (!rows.length) {
-                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No data</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="${cols.length}" class="empty-state">No data</td></tr>`;
                 return;
             }
             const maxScore = Math.max(...rows.map(r => r.score), 0.001);
             tbody.innerHTML = rows.map((r, i) => {
                 const safe = (s) => String(s || '').replace(/"/g, '&quot;');
                 const name = r.countryName || getCountryDisplayName(r.country) || r.country;
-                return `
-                <tr data-country="${safe(r.country)}" data-index="${i}">
-                    <td>${name}</td>
-                    <td class="num">${Math.round(r.count).toLocaleString()}</td>
-                    <td class="num">${Math.round(r.population).toLocaleString()}</td>
-                    <td class="num">${Math.round(r.area).toLocaleString()}</td>
-                    <td class="num"><div class="score-bar"><div class="score-bar-fill" style="width:${(r.score / maxScore * 100).toFixed(0)}%"></div></div> ${r.score.toFixed(2)}</td>
-                </tr>
-            `}).join('');
+                const popPct = r.sharePop != null ? r.sharePop.toFixed(1) + '%' : '—';
+                const areaPct = r.shareArea != null ? r.shareArea.toFixed(1) + '%' : '—';
+                const popBar = r.sharePop != null ? Math.min(r.sharePop, 100).toFixed(1) : 0;
+                const areaBar = r.shareArea != null ? Math.min(r.shareArea, 100).toFixed(1) : 0;
+                const cells = [];
+                cells.push(`<td>${name}</td>`);
+                if (vis.count) cells.push(`<td class="num">${Math.round(r.count).toLocaleString('en-US')}</td>`);
+                if (vis.area) cells.push(`<td class="num">${Math.round(r.area).toLocaleString('en-US')}</td>`);
+                if (vis.pop) cells.push(`<td class="num">${Math.round(r.population).toLocaleString('en-US')}</td>`);
+                cells.push(`<td class="num" title="Share of country total population"><div class="score-bar"><div class="score-bar-fill" style="width:${popBar}%"></div></div> ${popPct}</td>`);
+                cells.push(`<td class="num" title="Share of country total area"><div class="score-bar"><div class="score-bar-fill" style="width:${areaBar}%"></div></div> ${areaPct}</td>`);
+                cells.push(`<td class="num"><div class="score-bar"><div class="score-bar-fill" style="width:${(r.score / maxScore * 100).toFixed(0)}%"></div></div> ${r.score.toFixed(2)}</td>`);
+                return `<tr data-country="${safe(r.country)}" data-index="${i}">${cells.join('')}</tr>`;
+            }).join('');
 
             document.querySelectorAll('#dataTable th[data-sort]').forEach(th => {
                 th.classList.remove('sorted-asc', 'sorted-desc');
                 th.onclick = () => {
                     const key = th.dataset.sort;
+                    if (!key) return;
                     const asc = th.classList.contains('sorted-desc');
                     filteredData.sort((a, b) => {
                         let va = a[key], vb = b[key];
-                        if (key === 'country') return asc ? (va || '').localeCompare(vb || '') : (vb || '').localeCompare(va || '');
                         if (key === 'score') return asc ? va - vb : vb - va;
+                        if (key === 'sharePop' || key === 'shareArea') {
+                            const na = va != null && Number.isFinite(va) ? va : -1;
+                            const nb = vb != null && Number.isFinite(vb) ? vb : -1;
+                            return asc ? na - nb : nb - na;
+                        }
                         return asc ? (va || 0) - (vb || 0) : (vb || 0) - (va || 0);
                     });
                     document.getElementById('sortBy').value = key;
@@ -669,7 +881,7 @@
             if (!data.length || !charts.rank) return;
             const bg = data.map(d => selectedCountries.has(d.country) ? barHighlightColor : barColor);
             const border = data.map(d => selectedCountries.has(d.country) ? barHighlightBorder : barBorder);
-            [charts.rank, charts.count, charts.population, charts.area].forEach(ch => {
+            [charts.rank, charts.count, charts.population, charts.area, charts.sharePop, charts.shareArea].forEach(ch => {
                 if (ch && ch.data && ch.data.datasets && ch.data.datasets[0]) {
                     ch.data.datasets[0].backgroundColor = bg;
                     ch.data.datasets[0].borderColor = border;
@@ -696,16 +908,72 @@
         }
 
         const BUBBLE_LABEL_TOP_N = 12;
+        const bubblePiePlugin = {
+            id: 'bubblePiePlugin',
+            afterDatasetDraw(chart, args) {
+                if (chart.config.type !== 'bubble') return;
+                if (args.index !== 0) return;
+                const meta = chart.getDatasetMeta(0);
+                if (!meta || !meta.data.length) return;
+                const ctx = chart.ctx;
+                const primaryBase = { r: 91, g: 143, b: 163 };
+                const sliceRest = 'rgba(232, 230, 225, 0.85)';
+                const dataset = chart.data.datasets[0] && chart.data.datasets[0].data;
+                meta.data.forEach((el, i) => {
+                    const point = (dataset && dataset[i]) || {};
+                    const shareArea = Math.min(100, Math.max(0, Number(point.shareArea) || 0));
+                    const sharePop = Math.min(100, Math.max(0, Number(point.sharePop) || 0));
+                    const cx = el.x;
+                    const cy = el.y;
+                    let radiusPx = 0;
+                    if (el.width != null && el.height != null) radiusPx = (el.width + el.height) / 4;
+                    if (radiusPx <= 0 && point.r != null) {
+                        const rVal = Number(point.r) || 15;
+                        radiusPx = Math.max(6, 4 + (rVal - 5) * 1.2);
+                    }
+                    if (radiusPx <= 0) radiusPx = 10;
+                    const alpha = 0.35 + 0.6 * (sharePop / 100);
+                    const country = point.raw && point.raw.country;
+                    const isHighlight = country && selectedCountries.has(country);
+                    const highlightBase = { r: 212, g: 165, b: 116 };
+                    const slicePrimary = isHighlight
+                        ? `rgba(${highlightBase.r}, ${highlightBase.g}, ${highlightBase.b}, ${Math.min(1, alpha + 0.2)})`
+                        : `rgba(${primaryBase.r}, ${primaryBase.g}, ${primaryBase.b}, ${alpha})`;
+                    const startAngle = -Math.PI / 2;
+                    const slice1End = startAngle + (shareArea / 100) * 2 * Math.PI;
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, radiusPx, startAngle, slice1End);
+                    ctx.lineTo(cx, cy);
+                    ctx.closePath();
+                    ctx.fillStyle = slicePrimary;
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, radiusPx, slice1End, startAngle + 2 * Math.PI);
+                    ctx.lineTo(cx, cy);
+                    ctx.closePath();
+                    ctx.fillStyle = sliceRest;
+                    ctx.fill();
+                    ctx.restore();
+                });
+            }
+        };
         const bubbleCountryLabelsPlugin = {
             id: 'bubbleCountryLabels',
             afterDraw(chart) {
+                if (chart.config.type !== 'bubble') return;
                 const meta = chart._bubbleLabelData;
                 if (!meta || !meta.currentChartData || !meta.topN) return;
                 const data = meta.currentChartData;
                 const topN = meta.topN;
+                const sortKey = meta.sortKey || 'score';
+                const getVal = (d) => {
+                    const v = d[sortKey];
+                    return v != null && Number.isFinite(v) ? v : 0;
+                };
                 const indices = data
-                    .map((d, i) => ({ i, score: d.score != null ? d.score : 0 }))
-                    .sort((a, b) => b.score - a.score)
+                    .map((d, i) => ({ i, val: getVal(d) }))
+                    .sort((a, b) => b.val - a.val)
                     .slice(0, topN)
                     .map(x => x.i);
                 const elements = chart.getDatasetMeta(0).data;
@@ -767,7 +1035,7 @@
             }
         };
         if (typeof Chart !== 'undefined') {
-            Chart.register(bubbleCountryLabelsPlugin);
+            Chart.register(bubblePiePlugin, bubbleCountryLabelsPlugin);
         }
         function renderCharts(data) {
             const metric = document.getElementById('metricType').value;
@@ -777,15 +1045,34 @@
             const counts = data.map(d => d.count);
             const pops = data.map(d => d.population);
             const areas = data.map(d => d.area);
+            const sharePops = data.map(d => d.sharePop != null ? d.sharePop : 0);
+            const shareAreas = data.map(d => d.shareArea != null ? d.shareArea : 0);
 
             // Fixed scale from full dataset so bar lengths stay comparable when sort/filter changes
             const scaleMaxCount = countryData.length ? Math.max(...countryData.map(d => d.count), 1) : 1;
             const scaleMaxPop = countryData.length ? Math.max(...countryData.map(d => d.population), 1) : 1;
             const scaleMaxArea = countryData.length ? Math.max(...countryData.map(d => d.area), 1) : 1;
 
+            const sortBy = document.getElementById('sortBy').value;
+            const yKey = sortBy;
+            const xKey = sortBy === 'score' ? 'count' : 'score';
+            const clampAxis = (val, key) => {
+                if (key === 'score') return Math.min(1, Math.max(0, Number(val) || 0));
+                if (key === 'sharePop' || key === 'shareArea') return Math.min(100, Math.max(0, Number(val) || 0));
+                return Number(val) || 0;
+            };
+            const yVals = data.map(d => clampAxis(d[yKey], yKey));
+            const xVals = data.map(d => clampAxis(d[xKey], xKey));
             const maxArea = Math.max(...areas, 1);
             const radii = areas.map(a => 5 + 25 * Math.sqrt(a / maxArea));
-            const bubbleData = counts.map((c, i) => ({ x: c, y: pops[i], r: radii[i] }));
+            const bubbleData = data.map((d, i) => ({
+                x: xVals[i],
+                y: yVals[i],
+                r: radii[i],
+                shareArea: d.shareArea != null ? d.shareArea : 0,
+                sharePop: d.sharePop != null ? d.sharePop : 0,
+                raw: d
+            }));
 
             currentChartData = data;
 
@@ -811,10 +1098,33 @@
                 charts.area.options.scales.x.max = scaleMaxArea;
                 charts.area.update();
 
+                if (charts.sharePop) {
+                    charts.sharePop.data.labels = labels;
+                    charts.sharePop.data.datasets[0].data = sharePops;
+                    charts.sharePop.options.scales.x.max = 100;
+                    charts.sharePop.update();
+                }
+                if (charts.shareArea) {
+                    charts.shareArea.data.labels = labels;
+                    charts.shareArea.data.datasets[0].data = shareAreas;
+                    charts.shareArea.options.scales.x.max = 100;
+                    charts.shareArea.update();
+                }
+
                 charts.scatter.data.datasets[0].data = bubbleData;
-                charts.scatter.options.scales.x.title.text = `${label} count (agglos)`;
-                charts.scatter.options.scales.y.title.text = `${label} population`;
-                charts.scatter._bubbleLabelData = { currentChartData: data, topN: BUBBLE_LABEL_TOP_N };
+                const xTitle = xKey === 'score' ? 'Score' : `${label} count (agglos)`;
+                const yTitle = yKey === 'score' ? 'Score' : yKey === 'count' ? `${label} count (agglos)` : yKey === 'population' ? 'Population' : yKey === 'area' ? 'Area (km²)' : yKey === 'sharePop' ? 'Pop %' : yKey === 'shareArea' ? 'Area %' : yKey;
+                charts.scatter.options.scales.x.title.text = xTitle;
+                charts.scatter.options.scales.y.title.text = yTitle;
+                const xMax = xKey === 'score' ? 1 : scaleMaxCount;
+                const yMax = yKey === 'score' ? 1 : yKey === 'sharePop' || yKey === 'shareArea' ? 100 : yKey === 'count' ? scaleMaxCount : yKey === 'population' ? scaleMaxPop : scaleMaxArea;
+                charts.scatter.options.scales.x.max = xMax;
+                charts.scatter.options.scales.y.max = yMax;
+                charts.scatter.options.scales.x.min = 0;
+                charts.scatter.options.scales.y.min = 0;
+                document.getElementById('bubbleChartTitle').textContent = `${yTitle} vs ${xTitle} (pie = area%, size = area, color = pop%)`;
+                charts.scatter._bubbleLabelData = { currentChartData: data, topN: BUBBLE_LABEL_TOP_N, sortKey: yKey };
+                charts.scatter._bubbleAxisKeys = { xKey, yKey };
                 charts.scatter.update();
                 applyHighlightToCharts();
                 return;
@@ -863,7 +1173,7 @@
                         borderWidth: 1
                     }]
                 },
-                options: barOpt('Count', counts, v => Math.round(v).toLocaleString(), scaleMaxCount)
+                options: barOpt('Count', counts, v => Math.round(v).toLocaleString('en-US'), scaleMaxCount)
             });
 
             charts.population = new Chart(document.getElementById('chartPopulation').getContext('2d'), {
@@ -878,7 +1188,7 @@
                         borderWidth: 1
                     }]
                 },
-                options: barOpt('Population', pops, v => Math.round(v).toLocaleString(), scaleMaxPop)
+                options: barOpt('Population', pops, v => Math.round(v).toLocaleString('en-US'), scaleMaxPop)
             });
 
             charts.area = new Chart(document.getElementById('chartArea').getContext('2d'), {
@@ -893,10 +1203,46 @@
                         borderWidth: 1
                     }]
                 },
-                options: barOpt('Area (km²)', areas, v => Math.round(v).toLocaleString(), scaleMaxArea)
+                options: barOpt('Area (km²)', areas, v => Math.round(v).toLocaleString('en-US'), scaleMaxArea)
+            });
+
+            charts.sharePop = new Chart(document.getElementById('chartSharePop').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Pop %',
+                        data: sharePops,
+                        backgroundColor: barColor,
+                        borderColor: barBorder,
+                        borderWidth: 1
+                    }]
+                },
+                options: barOpt('Pop %', sharePops, v => (Number(v).toFixed(1) + '%'), 100)
+            });
+
+            charts.shareArea = new Chart(document.getElementById('chartShareArea').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Area %',
+                        data: shareAreas,
+                        backgroundColor: barColor,
+                        borderColor: barBorder,
+                        borderWidth: 1
+                    }]
+                },
+                options: barOpt('Area %', shareAreas, v => (Number(v).toFixed(1) + '%'), 100)
             });
 
             applyHighlightToCharts();
+
+            const xTitle = xKey === 'score' ? 'Score' : `${label} count (agglos)`;
+            const yTitle = yKey === 'score' ? 'Score' : yKey === 'count' ? `${label} count (agglos)` : yKey === 'population' ? 'Population' : yKey === 'area' ? 'Area (km²)' : yKey === 'sharePop' ? 'Pop %' : yKey === 'shareArea' ? 'Area %' : yKey;
+            const xMax = xKey === 'score' ? 1 : scaleMaxCount;
+            const yMax = yKey === 'score' ? 1 : yKey === 'sharePop' || yKey === 'shareArea' ? 100 : yKey === 'count' ? scaleMaxCount : yKey === 'population' ? scaleMaxPop : scaleMaxArea;
+            document.getElementById('bubbleChartTitle').textContent = `${yTitle} vs ${xTitle} (pie = area%, size = area, color = pop%)`;
 
             const ctxScatter = document.getElementById('chartScatter').getContext('2d');
             const zoomPlugin = typeof Chart !== 'undefined' && Chart.registry && Chart.registry.getPlugin('zoom');
@@ -906,9 +1252,9 @@
                     datasets: [{
                         label: 'Countries',
                         data: bubbleData,
-                        backgroundColor: 'rgba(91, 143, 163, 0.5)',
-                        borderColor: '#5B8FA3',
-                        borderWidth: 1
+                        backgroundColor: 'transparent',
+                        borderColor: 'transparent',
+                        borderWidth: 0
                     }]
                 },
                 options: {
@@ -918,14 +1264,42 @@
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            callbacks: {
-                                label: (ctx) => {
-                                    const i = ctx.dataIndex;
-                                    const d = currentChartData[i];
-                                    if (!d) return [];
-                                    const countryName = d.countryName || getCountryDisplayName(d.country) || d.country;
-                                    return [countryName, `Count: ${(d.count || 0).toLocaleString()}`, `Population: ${(d.population || 0).toLocaleString()}`, `Area: ${(d.area || 0).toLocaleString()} km²`];
+                            enabled: false,
+                            external: function(context) {
+                                const el = document.getElementById('bubbleTooltip');
+                                if (!el) return;
+                                const { chart, tooltip } = context;
+                                if (tooltip.opacity === 0 || !tooltip.dataPoints || !tooltip.dataPoints.length) {
+                                    el.classList.remove('visible');
+                                    el.setAttribute('aria-hidden', 'true');
+                                    return;
                                 }
+                                const d = tooltip.dataPoints[0].raw && tooltip.dataPoints[0].raw.raw ? tooltip.dataPoints[0].raw.raw : currentChartData[tooltip.dataPoints[0].dataIndex];
+                                const countryName = d ? (d.countryName || getCountryDisplayName(d.country) || d.country) : '';
+                                const lines = d ? [
+                                    countryName,
+                                    `${xTitle}: ${(d[xKey] != null ? (xKey === 'score' ? d[xKey].toFixed(2) : Number(d[xKey]).toLocaleString('en-US')) : '—')}`,
+                                    `${yTitle}: ${(d[yKey] != null ? (yKey === 'score' ? d[yKey].toFixed(2) : yKey === 'sharePop' || yKey === 'shareArea' ? d[yKey].toFixed(1) + '%' : Number(d[yKey]).toLocaleString('en-US')) : '—')}`,
+                                    `Area: ${(d.area || 0).toLocaleString('en-US')} km²`,
+                                    `Area %: ${(d.shareArea != null ? d.shareArea.toFixed(1) : '—')}%`,
+                                    `Pop %: ${(d.sharePop != null ? d.sharePop.toFixed(1) : '—')}%`
+                                ] : [];
+                                el.innerHTML = '<div class="tt-title">' + (lines[0] || '') + '</div><div class="tt-body">' + (lines.slice(1).join('\n') || '') + '</div>';
+                                el.classList.add('visible');
+                                el.setAttribute('aria-hidden', 'false');
+                                const container = document.getElementById('bubbleChartContainer');
+                                const canvasRect = chart.canvas.getBoundingClientRect();
+                                const containerRect = container.getBoundingClientRect();
+                                const px = canvasRect.left - containerRect.left + tooltip.caretX;
+                                const py = canvasRect.top - containerRect.top + tooltip.caretY;
+                                const gap = 10;
+                                let left = px - el.offsetWidth / 2;
+                                let top = py - el.offsetHeight - gap;
+                                if (left < 4) left = 4;
+                                if (left + el.offsetWidth > container.offsetWidth - 4) left = container.offsetWidth - el.offsetWidth - 4;
+                                if (top < 4) top = py + gap;
+                                el.style.left = left + 'px';
+                                el.style.top = top + 'px';
                             }
                         },
                         zoom: zoomPlugin ? {
@@ -946,8 +1320,9 @@
                         } : {}
                     },
                     scales: {
-                        x: { title: { display: true, text: `${label} count (agglos)` } },
-                        y: { title: { display: true, text: `${label} population` } }
+                        x: { min: 0, max: xMax, title: { display: true, text: xTitle } },
+                        y: { min: 0, max: yMax, title: { display: true, text: yTitle } },
+                        r: { display: false, min: 0, max: 35 }
                     },
                     onClick: (ev, els) => {
                         if (bubbleChartMode === 'boxSelect') return;
@@ -965,7 +1340,8 @@
                     }
                 }
             });
-            charts.scatter._bubbleLabelData = { currentChartData: data, topN: BUBBLE_LABEL_TOP_N };
+            charts.scatter._bubbleLabelData = { currentChartData: data, topN: BUBBLE_LABEL_TOP_N, sortKey: yKey };
+            charts.scatter._bubbleAxisKeys = { xKey, yKey };
 
             const zoomBtn = document.getElementById('bubbleZoomBtn');
             const panBtn = document.getElementById('bubblePanBtn');
@@ -1055,9 +1431,10 @@
                     const dataMaxY = Math.max(yMin, yMax);
 
                     selectedCountries.clear();
+                    const axisKeys = charts.scatter._bubbleAxisKeys || { xKey: 'count', yKey: 'population' };
                     currentChartData.forEach((d, i) => {
-                        const bx = (d.count != null) ? d.count : 0;
-                        const by = (d.population != null) ? d.population : 0;
+                        const bx = (d[axisKeys.xKey] != null) ? d[axisKeys.xKey] : 0;
+                        const by = (d[axisKeys.yKey] != null) ? d[axisKeys.yKey] : 0;
                         if (bx >= dataMinX && bx <= dataMaxX && by >= dataMinY && by <= dataMaxY) {
                             selectedCountries.add(d.country);
                         }
@@ -1078,10 +1455,23 @@
         document.getElementById('searchCountry').addEventListener('input', () => { applyFilters(); });
         document.getElementById('sortBy').addEventListener('change', () => { applyFilters(); });
         document.getElementById('topN').addEventListener('change', () => { applyFilters(); });
+        ['colCount', 'colPop', 'colArea'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', () => { applyFilters(); });
+        });
         document.getElementById('clearSelection').addEventListener('click', () => {
             selectedCountries.clear();
             applyHighlightToTable();
             applyHighlightToCharts();
+        });
+
+        document.querySelectorAll('.collapse-header').forEach(h => {
+            h.addEventListener('click', () => {
+                const section = h.closest('.collapse-section');
+                if (!section) return;
+                const isCollapsed = section.classList.toggle('collapsed');
+                h.setAttribute('aria-expanded', !isCollapsed);
+            });
         });
 
         loadData();

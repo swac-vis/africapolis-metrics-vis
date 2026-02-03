@@ -3417,9 +3417,12 @@
 
         function renderFusion() {
             const panel = document.getElementById('contentPanel');
-            const fusionCols = Object.keys(filteredData[0])
-                .filter(col => col.toLowerCase().includes('fusion'))
-                .sort();
+            const allFusion = Object.keys(filteredData[0])
+                .filter(col => col.toLowerCase().includes('fusion'));
+            const countCols = allFusion.filter(col => col.toLowerCase().includes('count')).sort();
+            const areaCols = allFusion.filter(col => col.toLowerCase().includes('area')).sort();
+            const populationCols = allFusion.filter(col => col.toLowerCase().includes('population')).sort();
+            const fusionCols = [...countCols, ...areaCols, ...populationCols];
             
             if (fusionCols.length === 0) {
                 panel.innerHTML = '<div class="empty-state">No fusion metrics found in current data</div>';
@@ -3433,11 +3436,6 @@
                 'L (>1M)': '#D4A574',
                 'Total': '#8B9A9F'
             };
-            
-            // Separate columns by type
-            const countCols = fusionCols.filter(col => col.toLowerCase().includes('count'));
-            const populationCols = fusionCols.filter(col => col.toLowerCase().includes('population'));
-            const areaCols = fusionCols.filter(col => col.toLowerCase().includes('area'));
             
             panel.innerHTML = `
                 <div class="table-header-fixed">
@@ -3791,9 +3789,12 @@
 
         function renderAbsorb() {
             const panel = document.getElementById('contentPanel');
-            const absorbCols = Object.keys(filteredData[0])
-                .filter(col => col.toLowerCase().includes('absorb'))
-                .sort();
+            const allAbsorb = Object.keys(filteredData[0])
+                .filter(col => col.toLowerCase().includes('absorb'));
+            const absorbCountCols = allAbsorb.filter(col => col.toLowerCase().includes('count')).sort();
+            const absorbAreaCols = allAbsorb.filter(col => col.toLowerCase().includes('area')).sort();
+            const absorbPopulationCols = allAbsorb.filter(col => col.toLowerCase().includes('population')).sort();
+            const absorbCols = [...absorbCountCols, ...absorbAreaCols, ...absorbPopulationCols];
             
             if (absorbCols.length === 0) {
                 panel.innerHTML = '<div class="empty-state">No absorb metrics found in current data</div>';
@@ -3807,11 +3808,6 @@
                 'L (>1M)': '#D4A574',
                 'Total': '#8B9A9F'
             };
-            
-            // Separate columns by type
-            const absorbCountCols = absorbCols.filter(col => col.toLowerCase().includes('count'));
-            const absorbPopulationCols = absorbCols.filter(col => col.toLowerCase().includes('population'));
-            const absorbAreaCols = absorbCols.filter(col => col.toLowerCase().includes('area'));
             
             panel.innerHTML = `
                 <div class="table-header-fixed">
@@ -5291,7 +5287,7 @@
                 </div>
                 <div class="map-legend-item">
                     <div class="map-legend-color" style="background: linear-gradient(to right, #F5E8D4, #D4A574); width: 60px; height: 12px;"></div>
-                    <span>${Math.round(areaMin).toLocaleString()} - ${Math.round(areaMax).toLocaleString()}</span>
+                    <span>${Math.round(areaMin).toLocaleString('en-US')} - ${Math.round(areaMax).toLocaleString('en-US')}</span>
                 </div>
                 <div class="map-legend-item" style="margin-top: 8px;">
                     <span>Population</span>
@@ -5299,12 +5295,12 @@
                 <div class="map-legend-item" style="display: flex; align-items: center; gap: 8px;">
                     <div style="display: flex; align-items: center; gap: 4px;">
                         <div style="background: #5B8FA3; border-radius: 50%; width: ${minSize}px; height: ${minSize}px; flex-shrink: 0;"></div>
-                        <span style="font-size: 10px;">${Math.round(popMin).toLocaleString()}</span>
+                        <span style="font-size: 10px;">${Math.round(popMin).toLocaleString('en-US')}</span>
                 </div>
                     <span style="color: #999;">→</span>
                     <div style="display: flex; align-items: center; gap: 4px;">
                         <div style="background: #5B8FA3; border-radius: 50%; width: ${maxSize}px; height: ${maxSize}px; flex-shrink: 0;"></div>
-                        <span style="font-size: 10px;">${Math.round(popMax).toLocaleString()}</span>
+                        <span style="font-size: 10px;">${Math.round(popMax).toLocaleString('en-US')}</span>
                 </div>
                 </div>
             `);
@@ -5488,11 +5484,15 @@
                             displayValue += getCountryTypeBadge(value);
                         }
                     } else if (typeof value === 'number') {
-                        // Format population and area columns as integers with comma separators
-                        if (col.startsWith('Population_') || col.startsWith('Area_')) {
+                        // Format population, area, count as integers with comma separators (incl. Fusion/Absorb column names)
+                        const colLower = col.toLowerCase();
+                        const isPopulation = col.startsWith('Population_') || colLower.includes('population');
+                        const isArea = col.startsWith('Area_') || (colLower.includes('area') && !colLower.includes('population'));
+                        const isCount = col.startsWith('Count_') || (colLower.includes('count') && !colLower.includes('population') && !colLower.includes('area'));
+                        if (isPopulation || isArea || isCount) {
                             displayValue = Math.round(value).toLocaleString('en-US');
                         } else {
-                            displayValue = value % 1 === 0 ? value : value.toFixed(2);
+                            displayValue = value % 1 === 0 ? Number(value).toLocaleString('en-US') : value.toFixed(2);
                         }
                     } else {
                         displayValue = value || '';
@@ -5516,17 +5516,14 @@
                     
                     const difference = endValue - startValue;
                     
-                    // Format difference using the same logic as original columns
+                    // Format difference: Population, Area, Count = comma; others = 2 decimals
                     let displayValue = '';
-                    // Check if baseName starts with 'Population' or 'Area' (with or without underscore)
-                    const isPopulationOrArea = diffCol.baseName.startsWith('Population') || diffCol.baseName.startsWith('Area');
-                    
-                    if (isPopulationOrArea) {
-                        // Population and Area: round to integer and add comma separators
+                    const base = diffCol.baseName;
+                    const isPopulationOrAreaOrCount = base.startsWith('Population') || base.startsWith('Area') || base.startsWith('Count');
+                    if (isPopulationOrAreaOrCount) {
                         displayValue = Math.round(difference).toLocaleString('en-US');
                     } else {
-                        // Other columns: integer if whole number, otherwise 2 decimal places
-                        displayValue = difference % 1 === 0 ? difference.toString() : difference.toFixed(2);
+                        displayValue = difference % 1 === 0 ? Number(difference).toLocaleString('en-US') : difference.toFixed(2);
                     }
                     
                     // Add sign for positive values (negative values already have minus sign)
