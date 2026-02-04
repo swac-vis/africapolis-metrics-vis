@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fusion agglomerations 2020 to 2050 size transition</title>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/sankey.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; width: 100%; overflow: hidden; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #FAF9F6;
+            color: #2C3E50;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+        }
+        .header {
+            background: #fff;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #E8E6E1;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .header h1 { font-size: 17px; font-weight: 600; color: #2C3E50; }
+        .header a { color: #5B8FA3; text-decoration: none; font-size: 12px; }
+        .header a:hover { text-decoration: underline; }
+        .controls {
+            background: #fff;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #E8E6E1;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+        .controls label { font-size: 12px; color: #2C3E50; margin-right: 8px; }
+        .controls select {
+            padding: 8px 10px;
+            border: 1px solid #D4D1CA;
+            border-radius: 6px;
+            font-size: 12px;
+            background: #fff;
+            min-width: 200px;
+        }
+        .summary {
+            font-size: 12px;
+            color: #6B7A8A;
+            margin-top: 8px;
+        }
+        .matrix-section {
+            background: #fff;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid #E8E6E1;
+            overflow-x: auto;
+        }
+        .matrix-section h2 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2C3E50;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+        .matrix-section .footnote { flex-shrink: 0; }
+        .transition-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .transition-table th,
+        .transition-table td {
+            padding: 8px 12px;
+            border: 1px solid #E8E6E1;
+            text-align: center;
+        }
+        .transition-table th {
+            background: #F5F3F0;
+            color: #6B7A8A;
+            font-weight: 600;
+        }
+        .transition-table th.row-header {
+            text-align: left;
+        }
+        .transition-table td.row-header {
+            text-align: left;
+            font-weight: 500;
+        }
+        .transition-table .num { text-align: right; }
+        .transition-table tbody tr:hover { background: #F8F7F5; }
+        .transition-table td.cell-heat { min-width: 64px; }
+        .transition-table td.cell-heat.selected { outline: 2px solid #5B8FA3; outline-offset: -1px; z-index: 1; position: relative; }
+        .transition-table th.col-header-click,
+        .transition-table td.row-header-click { cursor: pointer; }
+        .transition-table th.col-header-click:hover,
+        .transition-table td.row-header-click:hover { background: #E8E6E1; }
+        .transition-table th.col-header-click.header-selected,
+        .transition-table td.row-header-click.header-selected { background: rgba(91, 143, 163, 0.25); font-weight: 600; }
+        .transition-table tr.row-total { background: #F5F3F0; font-weight: 600; }
+        .transition-table tr.row-total td { border-top: 2px solid #E8E6E1; }
+        .size-small   { border-left: 3px solid #6B9B8A; }
+        .size-intermediate { border-left: 3px solid #5B8FA3; }
+        .size-large   { border-left: 3px solid #D4A574; }
+        .loading, .empty-state { padding: 24px; text-align: center; color: #6B7A8A; }
+        .viz-section {
+            background: #fff;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid #E8E6E1;
+            margin-bottom: 12px;
+        }
+        .viz-section h2 { font-size: 13px; font-weight: 600; color: #2C3E50; margin-bottom: 10px; }
+        .main-content {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        .main-row {
+            display: flex;
+            gap: 14px;
+            align-items: stretch;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+        }
+        .left-column {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow: hidden;
+        }
+        .sankey-box {
+            flex: 1.5;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid #E8E6E1;
+            background: #fff;
+            overflow: hidden;
+        }
+        #sankeyContainer { width: 100%; flex: 1; min-height: 280px; }
+        .matrix-section {
+            flex: 1;
+            min-height: 0;
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .matrix-section .matrix-inner { flex: 1; min-height: 0; overflow: auto; }
+        .list-right {
+            flex: 0 0 42%;
+            min-width: 280px;
+            background: #fff;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid #E8E6E1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .list-header-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; flex-shrink: 0; }
+        .detail-panel h3 { font-size: 12px; font-weight: 600; color: #2C3E50; margin: 0; }
+        .detail-panel .btn-all { padding: 4px 10px; font-size: 11px; border: 1px solid #5B8FA3; background: #fff; color: #5B8FA3; border-radius: 6px; cursor: pointer; }
+        .detail-panel .btn-all:hover { background: #5B8FA3; color: #fff; }
+        .detail-panel .list-scroll {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+        .detail-panel .agg-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .detail-panel .agg-table th,
+        .detail-panel .agg-table td { padding: 6px 8px; border: 1px solid #E8E6E1; text-align: left; }
+        .detail-panel .agg-table th { background: #F5F3F0; color: #6B7A8A; font-weight: 600; white-space: nowrap; cursor: pointer; user-select: none; }
+        .detail-panel .agg-table th:hover { background: #E8E6E1; }
+        .detail-panel .agg-table th.sorted-asc::after { content: ' ▴'; font-size: 9px; }
+        .detail-panel .agg-table th.sorted-desc::after { content: ' ▾'; font-size: 9px; }
+        .detail-panel .agg-table td.num { text-align: right; }
+        .detail-panel .agg-table tbody tr:hover { background: #F8F7F5; }
+        .transition-table td.cell-heat { cursor: pointer; }
+        .footnote {
+            font-size: 11px;
+            color: #6B7A8A;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Fusion agglomerations 2020 to 2050 size transition</h1>
+        <div>
+            <a href="fusion-absorb-analysis.html">Fusion & Absorb Analysis</a>
+            <span style="margin: 0 8px;">|</span>
+            <a href="index.html">← Urban Metrics</a>
+        </div>
+    </div>
+    <div class="controls">
+        <label for="countryFilter">Country:</label>
+        <select id="countryFilter">
+            <option value="">All countries</option>
+        </select>
+        <div class="summary" id="summary"></div>
+    </div>
+    <div class="main-content">
+    <h2 style="font-size: 13px; font-weight: 600; color: #2C3E50; margin-bottom: 8px; flex-shrink: 0;">Sankey & matrix: click a flow or matrix cell to filter the list</h2>
+    <div class="main-row">
+        <div class="left-column">
+            <div class="sankey-box">
+                <div id="sankeyContainer"></div>
+            </div>
+            <div class="matrix-section">
+                <h2>Heatmap matrix (click cell to filter list)</h2>
+                <div class="matrix-inner">
+                    <div id="matrixContainer">
+                        <div class="loading" id="loading">Loading merged_agglomerations_by_country.json…</div>
+                    </div>
+                </div>
+                <p class="footnote">Size: Small (&lt;100k), Intermediate (100k–1M), Large (&gt;1M).</p>
+            </div>
+        </div>
+        <div id="detailPanel" class="list-right detail-panel">
+            <div class="list-header-row">
+                <h3 id="detailTitle">Agglomerations</h3>
+                <button type="button" id="btnShowAll" class="btn-all" title="Clear selection, show all">All</button>
+            </div>
+            <div class="list-scroll">
+                <table class="agg-table" id="aggTable">
+                    <thead><tr>
+                        <th data-col="name">Agglomeration</th>
+                        <th data-col="country">Country</th>
+                        <th data-col="2020">2020</th>
+                        <th data-col="2050">2050</th>
+                        <th data-col="diff">Difference</th>
+                    </tr></thead>
+                    <tbody id="aggList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        const ISO_TO_COUNTRY = { DZA: 'Algeria', AGO: 'Angola', BEN: 'Benin', BWA: 'Botswana', BFA: 'Burkina Faso', BDI: 'Burundi', CMR: 'Cameroon', CPV: 'Cape Verde', CAF: 'Central African Republic', TCD: 'Chad', COM: 'Comoros', COG: 'Congo', COD: 'DR Congo', CIV: 'Côte d\'Ivoire', DJI: 'Djibouti', EGY: 'Egypt', GNQ: 'Equatorial Guinea', ERI: 'Eritrea', SWZ: 'Eswatini', ETH: 'Ethiopia', GAB: 'Gabon', GMB: 'Gambia', GHA: 'Ghana', GIN: 'Guinea', GNB: 'Guinea-Bissau', KEN: 'Kenya', LSO: 'Lesotho', LBR: 'Liberia', LBY: 'Libya', MDG: 'Madagascar', MWI: 'Malawi', MLI: 'Mali', MRT: 'Mauritania', MUS: 'Mauritius', MAR: 'Morocco', MOZ: 'Mozambique', NAM: 'Namibia', NER: 'Niger', NGA: 'Nigeria', RWA: 'Rwanda', STP: 'São Tomé and Príncipe', SEN: 'Senegal', SYC: 'Seychelles', SLE: 'Sierra Leone', SOM: 'Somalia', ZAF: 'South Africa', SSD: 'South Sudan', SDN: 'Sudan', TZA: 'Tanzania', TGO: 'Togo', TUN: 'Tunisia', UGA: 'Uganda', ESH: 'Western Sahara', ZMB: 'Zambia', ZWE: 'Zimbabwe' };
+        const SIZE_ORDER = ['Small', 'Intermediate', 'Large'];
+        const SIZE_CLASS = { Small: 'size-small', Intermediate: 'size-intermediate', Large: 'size-large' };
+
+        let rawData = null;
+        let currentAggLists = null;
+        let currentAggsFull = [];
+        let currentListRows = [];
+        let listSortBy = null;
+        let listSortDir = 1;
+        const selectedFlows = new Set();
+
+        function buildMatrix(countryCode) {
+            if (!rawData) return { matrix: null, total: 0, aggLists: null, aggs: [] };
+            const aggs = countryCode
+                ? (rawData[countryCode] && rawData[countryCode].agglomerations) || []
+                : Object.values(rawData).flatMap(c => c.agglomerations || []);
+            const matrix = {};
+            const aggLists = {};
+            SIZE_ORDER.forEach(s20 => { matrix[s20] = {}; aggLists[s20] = {}; SIZE_ORDER.forEach(s50 => { matrix[s20][s50] = 0; aggLists[s20][s50] = []; }); });
+            aggs.forEach(agg => {
+                const c20 = (agg.classification_by_year && agg.classification_by_year['2020']) || 'Small';
+                const c50 = (agg.classification_by_year && agg.classification_by_year['2050']) || 'Small';
+                const s20 = SIZE_ORDER.includes(c20) ? c20 : 'Small';
+                const s50 = SIZE_ORDER.includes(c50) ? c50 : 'Small';
+                matrix[s20][s50]++;
+                aggLists[s20][s50].push(agg);
+            });
+            return { matrix, total: aggs.length, aggLists, aggs };
+        }
+
+        function aggToRow(agg) {
+            const name = (agg.Agglomeration_Name || '').replace(/</g, '&lt;');
+            const country = ISO_TO_COUNTRY[agg.ISO3] || agg.ISO3 || '';
+            const p20 = (agg.population_by_year && agg.population_by_year['2020']) != null ? agg.population_by_year['2020'] : null;
+            const p50 = (agg.population_by_year && agg.population_by_year['2050']) != null ? agg.population_by_year['2050'] : null;
+            const pop20Str = p20 != null ? Math.round(p20).toLocaleString('en-US') : '—';
+            const pop50Str = p50 != null ? Math.round(p50).toLocaleString('en-US') : '—';
+            const diff = (p20 != null && p50 != null) ? (p50 - p20) : null;
+            const diffStr = diff != null ? (diff >= 0 ? '+' : '') + Math.round(diff).toLocaleString('en-US') : '—';
+            return { name, country, pop20Str, pop50Str, diffStr, _pop20: p20 != null ? p20 : -1, _pop50: p50 != null ? p50 : -1, _diff: diff != null ? diff : -Infinity };
+        }
+
+        function renderListBody(rows) {
+            const tbody = document.getElementById('aggList');
+            const sorted = sortListRows(rows);
+            tbody.innerHTML = sorted.map(r => '<tr><td>' + r.name + '</td><td>' + r.country + '</td><td class="num">' + r.pop20Str + '</td><td class="num">' + r.pop50Str + '</td><td class="num">' + r.diffStr + '</td></tr>').join('');
+        }
+
+        function sortListRows(rows) {
+            if (!rows.length || !listSortBy) return rows;
+            const key = listSortBy;
+            const dir = listSortDir;
+            return rows.slice().sort((a, b) => {
+                let va, vb;
+                if (key === 'name') { va = (a.name || '').toLowerCase(); vb = (b.name || '').toLowerCase(); return dir * (va < vb ? -1 : va > vb ? 1 : 0); }
+                if (key === 'country') { va = (a.country || '').toLowerCase(); vb = (b.country || '').toLowerCase(); return dir * (va < vb ? -1 : va > vb ? 1 : 0); }
+                if (key === '2020') { va = a._pop20; vb = b._pop20; }
+                else if (key === '2050') { va = a._pop50; vb = b._pop50; }
+                else if (key === 'diff') { va = a._diff; vb = b._diff; }
+                else return 0;
+                return dir * (va - vb);
+            });
+        }
+
+        function updateSortUI() {
+            document.querySelectorAll('.agg-table th[data-col]').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+                if (th.dataset.col === listSortBy) th.classList.add(listSortDir === 1 ? 'sorted-asc' : 'sorted-desc');
+            });
+        }
+
+        function flowKey(s20, s50) { return s20 + '-' + s50; }
+
+        function updateListFromSelection() {
+            const titleEl = document.getElementById('detailTitle');
+            let list = [];
+            if (selectedFlows.size === 0) {
+                list = currentAggsFull;
+                titleEl.textContent = 'All agglomerations (' + list.length + ')';
+            } else {
+                selectedFlows.forEach(key => {
+                    const [s20, s50] = key.split('-');
+                    if (currentAggLists && currentAggLists[s20] && currentAggLists[s20][s50])
+                        list.push(...currentAggLists[s20][s50]);
+                });
+                const labels = Array.from(selectedFlows).map(k => k.replace('-', ' → '));
+                titleEl.textContent = (labels.length === 1 ? labels[0] : labels.length + ' flows') + ' (' + list.length + ')';
+            }
+            currentListRows = list.map(aggToRow);
+            renderListBody(currentListRows);
+            updateSortUI();
+        }
+
+        function updateMatrixHighlight() {
+            document.querySelectorAll('#matrixContainer .cell-heat[data-s20][data-s50]').forEach(td => {
+                td.classList.toggle('selected', selectedFlows.has(flowKey(td.dataset.s20, td.dataset.s50)));
+            });
+            document.querySelectorAll('#matrixContainer th.col-header-click[data-node-id]').forEach(th => {
+                const nodeId = th.dataset.nodeId;
+                const nodeKeys = getFlowsForNode(nodeId);
+                const same = nodeKeys.size > 0 && nodeKeys.size === selectedFlows.size && [...nodeKeys].every(k => selectedFlows.has(k));
+                th.classList.toggle('header-selected', same);
+            });
+            document.querySelectorAll('#matrixContainer td.row-header-click[data-node-id]').forEach(td => {
+                const nodeId = td.dataset.nodeId;
+                const nodeKeys = getFlowsForNode(nodeId);
+                const same = nodeKeys.size > 0 && nodeKeys.size === selectedFlows.size && [...nodeKeys].every(k => selectedFlows.has(k));
+                td.classList.toggle('header-selected', same);
+            });
+        }
+
+        function updateSankeyHighlight() {
+            if (!sankeyChart || !sankeyChart.series || !sankeyChart.series[0]) return;
+            sankeyChart.series[0].points.forEach(p => {
+                const k = flowKey((p.from || '').replace('2020-', ''), (p.to || '').replace('2050-', ''));
+                const op = selectedFlows.has(k) ? 1 : 0.6;
+                if (p.graphic) p.graphic.attr({ opacity: op });
+                else p.update({ opacity: op }, false);
+            });
+            sankeyChart.redraw();
+        }
+
+        function toggleFlow(s20, s50) {
+            const key = flowKey(s20, s50);
+            if (selectedFlows.has(key)) selectedFlows.delete(key);
+            else selectedFlows.add(key);
+            updateListFromSelection();
+            updateMatrixHighlight();
+            updateSankeyHighlight();
+        }
+
+        function clearSelection() {
+            selectedFlows.clear();
+            updateListFromSelection();
+            updateMatrixHighlight();
+            updateSankeyHighlight();
+        }
+
+        function getFlowsForNode(nodeId) {
+            const keys = new Set();
+            if (!nodeId) return keys;
+            if (nodeId.startsWith('2020-')) {
+                const s20 = nodeId.replace('2020-', '');
+                SIZE_ORDER.forEach(s50 => { keys.add(flowKey(s20, s50)); });
+            } else if (nodeId.startsWith('2050-')) {
+                const s50 = nodeId.replace('2050-', '');
+                SIZE_ORDER.forEach(s20 => { keys.add(flowKey(s20, s50)); });
+            }
+            return keys;
+        }
+
+        function selectNodeFlows(nodeId) {
+            const nodeKeys = getFlowsForNode(nodeId);
+            if (!nodeKeys.size) return;
+            const same = nodeKeys.size === selectedFlows.size && [...nodeKeys].every(k => selectedFlows.has(k));
+            if (same) {
+                selectedFlows.clear();
+            } else {
+                selectedFlows.clear();
+                nodeKeys.forEach(k => selectedFlows.add(k));
+            }
+            updateListFromSelection();
+            updateMatrixHighlight();
+            updateSankeyHighlight();
+        }
+
+        function onListHeaderClick(col) {
+            if (listSortBy === col) listSortDir = -listSortDir;
+            else { listSortBy = col; listSortDir = 1; }
+            updateSortUI();
+            renderListBody(currentListRows);
+        }
+
+        function renderMatrix(countryCode) {
+            const container = document.getElementById('matrixContainer');
+            const summaryEl = document.getElementById('summary');
+            const result = buildMatrix(countryCode);
+            const { matrix, total, aggLists, aggs } = result;
+            currentAggLists = aggLists;
+            currentAggsFull = aggs || [];
+            if (!matrix || total === 0) {
+                container.innerHTML = '<div class="empty-state">No agglomerations for this selection.</div>';
+                summaryEl.textContent = '0 agglomerations.';
+                currentAggsFull = [];
+                currentAggLists = {};
+                selectedFlows.clear();
+                updateListFromSelection();
+                return;
+            }
+            const rowTotals = {};
+            SIZE_ORDER.forEach(s20 => { rowTotals[s20] = SIZE_ORDER.reduce((sum, s50) => sum + matrix[s20][s50], 0); });
+            const colTotals = {};
+            SIZE_ORDER.forEach(s50 => { colTotals[s50] = SIZE_ORDER.reduce((sum, s20) => sum + matrix[s20][s50], 0); });
+            let maxCell = 0;
+            SIZE_ORDER.forEach(s20 => { SIZE_ORDER.forEach(s50 => { maxCell = Math.max(maxCell, matrix[s20][s50]); }); });
+            const heatScale = maxCell > 0 ? v => `rgba(91, 143, 163, ${0.15 + 0.7 * (v / maxCell)})` : () => '#fff';
+            let html = '<table class="transition-table"><thead><tr><th class="row-header">2020 ↓ / 2050 →</th>';
+            SIZE_ORDER.forEach(s50 => { html += `<th class="col-header-click" data-node-id="2050-${s50}" title="Click to filter by ${s50} (2050)">${s50}</th>`; });
+            html += '<th>Total</th></tr></thead><tbody>';
+            SIZE_ORDER.forEach(s20 => {
+                const rTotal = rowTotals[s20];
+                html += `<tr class="${SIZE_CLASS[s20] || ''}"><td class="row-header row-header-click" data-node-id="2020-${s20}" title="Click to filter by ${s20} (2020)">${s20}</td>`;
+                SIZE_ORDER.forEach(s50 => {
+                    const n = matrix[s20][s50];
+                    const pct = rTotal > 0 ? (n / rTotal * 100).toFixed(1) : '0';
+                    const bg = heatScale(n);
+                    const sel = selectedFlows.has(flowKey(s20, s50)) ? ' selected' : '';
+                    html += `<td class="num cell-heat${sel}" style="background:${bg}" data-s20="${s20}" data-s50="${s50}" title="Click to toggle: ${s20} → ${s50} (${n})">${n} <span style="color:#6B7A8A">(${pct}%)</span></td>`;
+                });
+                html += `<td class="num">${rTotal}</td></tr>`;
+            });
+            html += '<tr class="row-total"><td class="row-header">Total</td>';
+            SIZE_ORDER.forEach(s50 => { html += `<td class="num">${colTotals[s50]}</td>`; });
+            html += `<td class="num">${total}</td></tr>`;
+            html += '</tbody></table>';
+            container.innerHTML = html;
+            container.querySelectorAll('.cell-heat[data-s20][data-s50]').forEach(td => {
+                td.addEventListener('click', () => toggleFlow(td.dataset.s20, td.dataset.s50));
+            });
+            container.querySelectorAll('th.col-header-click[data-node-id]').forEach(th => {
+                th.addEventListener('click', () => selectNodeFlows(th.dataset.nodeId));
+            });
+            container.querySelectorAll('td.row-header-click[data-node-id]').forEach(td => {
+                td.addEventListener('click', () => selectNodeFlows(td.dataset.nodeId));
+            });
+            updateMatrixHighlight();
+            const label = countryCode ? (ISO_TO_COUNTRY[countryCode] || countryCode) : 'All countries';
+            summaryEl.textContent = `${total.toLocaleString('en-US')} agglomerations · ${label}`;
+        }
+
+        function initCountryFilter() {
+            const sel = document.getElementById('countryFilter');
+            if (!rawData) return;
+            const codes = Object.keys(rawData).sort();
+            codes.forEach(iso => {
+                const opt = document.createElement('option');
+                opt.value = iso;
+                opt.textContent = `${ISO_TO_COUNTRY[iso] || iso} (${iso})`;
+                sel.appendChild(opt);
+            });
+            sel.addEventListener('change', () => {
+                selectedFlows.clear();
+                renderMatrix(sel.value || '');
+                renderSankey(sel.value || '');
+                updateListFromSelection();
+                updateMatrixHighlight();
+                updateSankeyHighlight(); /* re-apply after new chart */
+            });
+        }
+
+        const SIZE_COLOR = { Small: '#6B9B8A', Intermediate: '#5B8FA3', Large: '#D4A574' };
+        let sankeyChart = null;
+
+        function bindSankeyNodeClicks(chart) {
+            const series = chart.series && chart.series[0];
+            if (!series) return;
+            const nodeList = series.nodeList || (series.nodes && series.nodes.length ? series.nodes : []);
+            nodeList.forEach(function(node) {
+                const nodeId = (node.id != null ? node.id : (node.options && node.options.id)) || '';
+                if (!nodeId.startsWith('2020-') && !nodeId.startsWith('2050-')) return;
+                const graphic = node.graphic || (node.node && node.node.graphic);
+                const el = graphic && graphic.element;
+                if (el) {
+                    el.style.cursor = 'pointer';
+                    el.addEventListener('click', function() { selectNodeFlows(nodeId); });
+                }
+            });
+        }
+
+        function renderSankey(countryCode) {
+            const container = document.getElementById('sankeyContainer');
+            const result = buildMatrix(countryCode);
+            const { matrix, total, aggLists } = result;
+            currentAggLists = aggLists;
+            if (!matrix || total === 0) {
+                container.innerHTML = '<div class="empty-state">No data for Sankey.</div>';
+                if (sankeyChart) { sankeyChart.destroy(); sankeyChart = null; }
+                return;
+            }
+            const sankeyData = [];
+            SIZE_ORDER.forEach(s20 => {
+                SIZE_ORDER.forEach(s50 => {
+                    const v = matrix[s20][s50];
+                    if (v > 0) sankeyData.push(['2020-' + s20, '2050-' + s50, v]);
+                });
+            });
+            if (sankeyChart) sankeyChart.destroy();
+            const chartHeight = Math.max(200, container.clientHeight || 280);
+            sankeyChart = Highcharts.chart(container, {
+                chart: { type: 'sankey', height: chartHeight, backgroundColor: 'transparent', events: { load: function() { const ch = this; setTimeout(function() { bindSankeyNodeClicks(ch); }, 0); } } },
+                title: { text: null },
+                tooltip: {
+                    pointFormat: '{point.from} → {point.to}: <b>{point.weight}</b> agglomerations<br/><span style="font-size:10px">Click to filter list</span>',
+                    useHTML: true,
+                    nodeFormatter: function() { return '<b>' + (this.name || this.id) + '</b><br/><span style="font-size:10px">Click to filter by this node</span>'; }
+                },
+                plotOptions: {
+                    sankey: {
+                        dataLabels: {
+                            enabled: true,
+                            format: '{point.fromNode.name} → {point.toNode.name}',
+                            nodeFormat: '{point.name}'
+                        },
+                        point: {
+                            events: {
+                                click: function() {
+                                    const s20 = (this.from || '').replace('2020-', '');
+                                    const s50 = (this.to || '').replace('2050-', '');
+                                    if (s20 && s50) toggleFlow(s20, s50);
+                                }
+                            },
+                            cursor: 'pointer'
+                        },
+                        nodeWidth: 20,
+                        nodePadding: 10
+                    }
+                },
+                series: [{
+                    type: 'sankey',
+                    name: 'Size transition',
+                    keys: ['from', 'to', 'weight'],
+                    data: sankeyData,
+                    nodes: [
+                        { id: '2020-Small', name: 'S (2020)', color: SIZE_COLOR.Small },
+                        { id: '2020-Intermediate', name: 'M (2020)', color: SIZE_COLOR.Intermediate },
+                        { id: '2020-Large', name: 'L (2020)', color: SIZE_COLOR.Large },
+                        { id: '2050-Small', name: 'S (2050)', color: SIZE_COLOR.Small },
+                        { id: '2050-Intermediate', name: 'M (2050)', color: SIZE_COLOR.Intermediate },
+                        { id: '2050-Large', name: 'L (2050)', color: SIZE_COLOR.Large }
+                    ],
+                    colorByPoint: false,
+                    linkOpacity: 0.6
+                }]
+            });
+        }
+
+        function bindListSort() {
+            document.querySelectorAll('#aggTable th[data-col]').forEach(th => {
+                th.addEventListener('click', () => onListHeaderClick(th.dataset.col));
+            });
+        }
+
+        fetch('./merged_agglomerations_by_country.json')
+            .then(r => r.json())
+            .then(data => {
+                rawData = data;
+                document.getElementById('matrixContainer').innerHTML = '';
+                initCountryFilter();
+                renderMatrix('');
+                renderSankey('');
+                updateListFromSelection();
+                bindListSort();
+                document.getElementById('btnShowAll').addEventListener('click', clearSelection);
+                requestAnimationFrame(() => {
+                    renderSankey(document.getElementById('countryFilter').value || '');
+                    updateSankeyHighlight();
+                });
+            })
+            .catch(() => {
+                document.getElementById('matrixContainer').innerHTML = '<div class="empty-state">Failed to load merged_agglomerations_by_country.json</div>';
+            });
+        window.addEventListener('resize', () => {
+            const sel = document.getElementById('countryFilter');
+            if (sel && rawData) {
+                renderSankey(sel.value || '');
+                updateSankeyHighlight();
+            }
+        });
+    </script>
+</body>
+</html>

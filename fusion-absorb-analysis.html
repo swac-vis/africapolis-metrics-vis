@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fusion & Absorb – Country Analysis</title>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/sankey.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
@@ -67,10 +69,53 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 0;
             min-width: 0;
             flex-basis: 840px;
+            min-height: 0;
         }
+        .country-overview-panel {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .country-overview-panel.hidden { display: none !important; }
+        .agg-entry-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-shrink: 0;
+            padding: 10px 14px;
+            background: #E8F0F5;
+            border: 1px solid #5B8FA3;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .agg-entry-bar .agg-entry-text { font-size: 12px; color: #2C3E50; }
+        .agg-entry-bar .agg-entry-text strong { color: #5B8FA3; }
+        .btn-view-agg {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: 1px solid #5B8FA3;
+            background: #5B8FA3;
+            color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn-view-agg:hover { background: #4a7a8c; border-color: #4a7a8c; color: #fff; }
+        .agg-view-panel {
+            flex: 1;
+            min-height: 0;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .agg-view-panel.visible { display: flex !important; }
+        .agg-view-panel .agg-section { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+        .agg-view-panel .agg-toolbar { flex-shrink: 0; padding: 10px 14px; background: #fff; border-bottom: 1px solid #E8E6E1; }
         .panel-section {
             padding: 12px 14px;
             border-bottom: 1px solid #F0EEEA;
@@ -119,9 +164,12 @@
         }
         .filter-row-button {
             margin-top: 4px;
+            display: flex;
+            gap: 8px;
         }
         .filter-row-button button {
-            width: 100%;
+            flex: 1;
+            min-width: 0;
         }
         select, input[type="text"] {
             padding: 8px 10px;
@@ -411,12 +459,49 @@
         }
         .loading { padding: 20px; text-align: center; color: #6B7A8A; }
         .empty-state { padding: 20px; text-align: center; color: #6B7A8A; font-size: 12px; }
+        /* Agglomeration analysis view (replaces center when a country is selected) */
+        .agg-view-panel .agg-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; background: #fff; border: 1px solid #E8E6E1; border-radius: 8px 8px 0 0; flex-shrink: 0; }
+        .agg-view-panel .agg-toolbar h2 { font-size: 14px; font-weight: 600; color: #2C3E50; margin: 0; }
+        .agg-view-panel .btn-back { padding: 6px 12px; font-size: 12px; border: 1px solid #5B8FA3; background: #fff; color: #5B8FA3; border-radius: 6px; cursor: pointer; }
+        .agg-view-panel .btn-back:hover { background: #5B8FA3; color: #fff; }
+        .agg-view-panel .agg-body { flex: 1; min-height: 0; display: flex; gap: 14px; padding: 14px; background: #FAF9F6; overflow: hidden; }
+        .agg-section .agg-header { font-size: 13px; font-weight: 600; color: #2C3E50; flex-shrink: 0; }
+        .agg-section .agg-placeholder { padding: 24px; text-align: center; color: #6B7A8A; font-size: 12px; background: #fff; border: 1px solid #E8E6E1; border-radius: 8px; }
+        .agg-section .agg-content { flex: 1; min-height: 0; display: flex; gap: 14px; overflow: hidden; }
+        .agg-section .agg-left { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+        .agg-section .agg-sankey-box { flex: 1.5; min-height: 0; padding: 14px; border-radius: 8px; border: 1px solid #E8E6E1; background: #fff; overflow: hidden; display: flex; flex-direction: column; }
+        .agg-section #aggSankeyContainer { width: 100%; flex: 1; min-height: 200px; }
+        .agg-section .agg-matrix-section { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; background: #fff; padding: 14px; border-radius: 8px; border: 1px solid #E8E6E1; }
+        .agg-section .agg-matrix-section h3 { font-size: 12px; font-weight: 600; margin-bottom: 8px; flex-shrink: 0; }
+        .agg-section .agg-matrix-inner { flex: 1; min-height: 0; overflow: auto; }
+        .agg-section .agg-list-right { flex: 0 0 38%; min-width: 260px; background: #fff; padding: 14px; border-radius: 8px; border: 1px solid #E8E6E1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+        .agg-section .transition-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .agg-section .transition-table th, .agg-section .transition-table td { padding: 8px 12px; border: 1px solid #E8E6E1; text-align: center; }
+        .agg-section .transition-table th { background: #F5F3F0; color: #6B7A8A; font-weight: 600; }
+        .agg-section .transition-table th.row-header, .agg-section .transition-table td.row-header { text-align: left; }
+        .agg-section .transition-table .num { text-align: right; }
+        .agg-section .transition-table tr.row-total td { border-top: 2px solid #E8E6E1; }
+        .agg-section .transition-table td.cell-heat { min-width: 64px; cursor: pointer; }
+        .agg-section .transition-table td.cell-heat.selected { outline: 2px solid #5B8FA3; outline-offset: -1px; }
+        .agg-section .transition-table th.col-header-click, .agg-section .transition-table td.row-header-click { cursor: pointer; }
+        .agg-section .transition-table th.col-header-click.header-selected, .agg-section .transition-table td.row-header-click.header-selected { background: rgba(91, 143, 163, 0.25); font-weight: 600; }
+        .agg-section .list-header-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+        .agg-section .detail-panel h3 { font-size: 12px; font-weight: 600; color: #2C3E50; margin: 0; }
+        .agg-section .btn-all { padding: 4px 10px; font-size: 11px; border: 1px solid #5B8FA3; background: #fff; color: #5B8FA3; border-radius: 6px; cursor: pointer; }
+        .agg-section .btn-all:hover { background: #5B8FA3; color: #fff; }
+        .agg-section .detail-panel .list-scroll { flex: 1; min-height: 0; overflow: auto; }
+        .agg-section .detail-panel .agg-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .agg-section .detail-panel .agg-table th, .agg-section .detail-panel .agg-table td { padding: 6px 8px; border: 1px solid #E8E6E1; text-align: left; }
+        .agg-section .detail-panel .agg-table th { background: #F5F3F0; cursor: pointer; }
+        .agg-section .detail-panel .agg-table td.num { text-align: right; }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>Fusion & Absorb – Country Analysis</h1>
-        <a href="index.html">← Back to Urban Metrics</a>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <a href="index.html">← Back to Urban Metrics</a>
+        </div>
     </div>
     <div class="main">
         <div class="panel-left">
@@ -461,6 +546,7 @@
                             </select>
                         </div>
                         <div class="filter-row filter-row-button">
+                            <button type="button" id="selectAll">Select all</button>
                             <button type="button" id="clearSelection">Clear selection</button>
                         </div>
                     </div>
@@ -501,8 +587,13 @@
             </div>
         </div>
         <div class="panel-center">
-            <div class="charts-row">
-                <div class="charts-bar-row">
+            <div class="country-overview-panel" id="countryChartsPanel">
+                <div class="agg-entry-bar" id="aggEntryBar" style="display: none;">
+                    <span class="agg-entry-text"><span id="aggEntryCountryName"></span> selected.</span>
+                    <button type="button" class="btn-view-agg" id="btnViewAgglomeration" title="Open fusion agglomeration size transition view">View fusion agglomeration →</button>
+                </div>
+                <div class="charts-row">
+                    <div class="charts-bar-row">
                     <div class="chart-card">
                         <h3>Composite score</h3>
                         <div class="chart-container"><canvas id="chartRank"></canvas></div>
@@ -545,6 +636,48 @@
                     </div>
                 </div>
             </div>
+            </div>
+            <div class="agg-view-panel" id="aggViewPanel">
+            <div class="agg-section" id="aggSection">
+                <div class="agg-toolbar agg-header-row">
+                    <span class="agg-header" id="aggSectionTitle">Fusion agglomeration size transition (2020→2050)</span>
+                    <button type="button" class="btn-back" id="aggBtnBack" title="Return to country charts">← Back to country overview</button>
+                </div>
+                <div class="agg-placeholder" id="aggPlaceholder">Select a country from the list to view fusion agglomeration size transition.</div>
+                <div class="agg-content" id="aggContent" style="display: none;">
+                    <div class="agg-left">
+                        <div class="agg-sankey-box">
+                            <div id="aggSankeyContainer"></div>
+                        </div>
+                        <div class="agg-matrix-section">
+                            <h3>Heatmap matrix (click cell or header to filter list)</h3>
+                            <div class="agg-matrix-inner">
+                                <div id="aggMatrixContainer"></div>
+                            </div>
+                            <p class="footnote" style="margin-top: 6px; font-size: 11px; color: #6B7A8A;">Size: Small (&lt;100k), Intermediate (100k–1M), Large (&gt;1M).</p>
+                        </div>
+                    </div>
+                    <div id="aggDetailPanel" class="agg-list-right detail-panel">
+                        <div class="list-header-row">
+                            <h3 id="aggDetailTitle">Agglomerations</h3>
+                            <button type="button" id="aggBtnShowAll" class="btn-all" title="Clear selection">All</button>
+                        </div>
+                        <div class="list-scroll">
+                            <table class="agg-table" id="aggTable">
+                                <thead><tr>
+                                    <th data-col="name">Agglomeration</th>
+                                    <th data-col="country">Country</th>
+                                    <th data-col="2020">2020</th>
+                                    <th data-col="2050">2050</th>
+                                    <th data-col="diff">Difference</th>
+                                </tr></thead>
+                                <tbody id="aggList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
         </div>
     </div>
     <script>
@@ -582,6 +715,7 @@
         const barHighlightColor = 'rgba(212, 165, 116, 0.85)';
         const barHighlightBorder = '#D4A574';
         let selectedCountries = new Set();  // country codes, multi-select
+        let aggViewActive = false;  // true only after user clicks "View fusion agglomeration"
         const parseNum = (v) => {
             if (v == null || v === '') return 0;
             const s = String(v).replace(/,/g, '');
@@ -799,7 +933,7 @@
             const tbody = document.getElementById('tableBody');
             const vis = getListColumnVisibility();
             const cols = [
-                { key: 'country', label: 'Ctry', sort: null, num: false },
+                { key: 'country', label: 'Country', sort: null, num: false },
                 ...(vis.count ? [{ key: 'count', label: 'Count', sort: 'count', num: true }] : []),
                 ...(vis.area ? [{ key: 'area', label: 'Area (km²)', sort: 'area', num: true }] : []),
                 ...(vis.pop ? [{ key: 'population', label: 'Pop', sort: 'population', num: true }] : []),
@@ -866,6 +1000,7 @@
                     else selectedCountries.add(country);
                     applyHighlightToTable();
                     applyHighlightToCharts();
+                    if (typeof updateAgglomerationSection === 'function') updateAgglomerationSection();
                 });
             });
         }
@@ -903,6 +1038,7 @@
             else selectedCountries.add(country);
             applyHighlightToTable();
             applyHighlightToCharts();
+            if (typeof updateAgglomerationSection === 'function') updateAgglomerationSection();
             const row = document.querySelector(`#tableBody tr[data-country="${(country || '').replace(/"/g, '&quot;')}"]`);
             if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         }
@@ -1335,6 +1471,7 @@
                         else selectedCountries.add(country);
                         applyHighlightToTable();
                         applyHighlightToCharts();
+                        if (typeof updateAgglomerationSection === 'function') updateAgglomerationSection();
                         const row = document.querySelector(`#tableBody tr[data-country="${(country || '').replace(/"/g, '&quot;')}"]`);
                         if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
                     }
@@ -1441,6 +1578,7 @@
                     });
                     applyHighlightToTable();
                     applyHighlightToCharts();
+                    if (typeof updateAgglomerationSection === 'function') updateAgglomerationSection();
                 });
                 scatterCanvas.addEventListener('mouseleave', () => {
                     if (boxSelectStart) {
@@ -1451,7 +1589,10 @@
             }
         }
 
-        document.getElementById('metricType').addEventListener('change', () => { buildCountryData(); });
+        document.getElementById('metricType').addEventListener('change', () => {
+            buildCountryData();
+            if (typeof updateAgglomerationSection === 'function') updateAgglomerationSection();
+        });
         document.getElementById('searchCountry').addEventListener('input', () => { applyFilters(); });
         document.getElementById('sortBy').addEventListener('change', () => { applyFilters(); });
         document.getElementById('topN').addEventListener('change', () => { applyFilters(); });
@@ -1459,10 +1600,20 @@
             const el = document.getElementById(id);
             if (el) el.addEventListener('change', () => { applyFilters(); });
         });
+        document.getElementById('selectAll').addEventListener('click', () => {
+            document.querySelectorAll('#tableBody tr[data-country]').forEach(tr => {
+                const country = tr.dataset.country;
+                if (country) selectedCountries.add(country);
+            });
+            applyHighlightToTable();
+            applyHighlightToCharts();
+            if (typeof updateAgglomerationSection === 'function') updateAgglomerationSection();
+        });
         document.getElementById('clearSelection').addEventListener('click', () => {
             selectedCountries.clear();
             applyHighlightToTable();
             applyHighlightToCharts();
+            if (typeof updateAgglomerationSection === 'function') updateAgglomerationSection();
         });
 
         document.querySelectorAll('.collapse-header').forEach(h => {
@@ -1473,6 +1624,296 @@
                 h.setAttribute('aria-expanded', !isCollapsed);
             });
         });
+
+        (function() {
+            const SIZE_ORDER_AGG = ['Small', 'Intermediate', 'Large'];
+            const SIZE_CLASS_AGG = { Small: 'size-small', Intermediate: 'size-intermediate', Large: 'size-large' };
+            const SIZE_COLOR_AGG = { Small: '#6B9B8A', Intermediate: '#5B8FA3', Large: '#D4A574' };
+            let aggRawData = null;
+            let aggCurrentAggLists = null;
+            let aggCurrentAggsFull = [];
+            let aggCurrentListRows = [];
+            let aggListSortBy = null;
+            let aggListSortDir = 1;
+            const aggSelectedFlows = new Set();
+            let aggSankeyChart = null;
+            let aggBound = false;
+
+            function buildAggMatrix(countryCodeOrCodes) {
+                if (!aggRawData) return { matrix: null, total: 0, aggLists: null, aggs: [] };
+                const aggs = Array.isArray(countryCodeOrCodes)
+                    ? countryCodeOrCodes.flatMap(cc => (aggRawData[cc] && aggRawData[cc].agglomerations) || [])
+                    : (countryCodeOrCodes ? (aggRawData[countryCodeOrCodes] && aggRawData[countryCodeOrCodes].agglomerations) || [] : Object.values(aggRawData).flatMap(c => c.agglomerations || []));
+                const matrix = {};
+                const aggLists = {};
+                SIZE_ORDER_AGG.forEach(s20 => { matrix[s20] = {}; aggLists[s20] = {}; SIZE_ORDER_AGG.forEach(s50 => { matrix[s20][s50] = 0; aggLists[s20][s50] = []; }); });
+                aggs.forEach(agg => {
+                    const c20 = (agg.classification_by_year && agg.classification_by_year['2020']) || 'Small';
+                    const c50 = (agg.classification_by_year && agg.classification_by_year['2050']) || 'Small';
+                    const s20 = SIZE_ORDER_AGG.includes(c20) ? c20 : 'Small';
+                    const s50 = SIZE_ORDER_AGG.includes(c50) ? c50 : 'Small';
+                    matrix[s20][s50]++; aggLists[s20][s50].push(agg);
+                });
+                return { matrix, total: aggs.length, aggLists, aggs };
+            }
+            function aggToRow(agg) {
+                const name = (agg.Agglomeration_Name || '').replace(/</g, '&lt;');
+                const country = ISO_TO_COUNTRY[agg.ISO3] || agg.ISO3 || '';
+                const p20 = (agg.population_by_year && agg.population_by_year['2020']) != null ? agg.population_by_year['2020'] : null;
+                const p50 = (agg.population_by_year && agg.population_by_year['2050']) != null ? agg.population_by_year['2050'] : null;
+                const pop20Str = p20 != null ? Math.round(p20).toLocaleString('en-US') : '—';
+                const pop50Str = p50 != null ? Math.round(p50).toLocaleString('en-US') : '—';
+                const diff = (p20 != null && p50 != null) ? (p50 - p20) : null;
+                const diffStr = diff != null ? (diff >= 0 ? '+' : '') + Math.round(diff).toLocaleString('en-US') : '—';
+                return { name, country, pop20Str, pop50Str, diffStr, _pop20: p20 != null ? p20 : -1, _pop50: p50 != null ? p50 : -1, _diff: diff != null ? diff : -Infinity };
+            }
+            function aggFlowKey(s20, s50) { return s20 + '-' + s50; }
+            function sortAggListRows(rows) {
+                if (!rows.length || !aggListSortBy) return rows;
+                const key = aggListSortBy, dir = aggListSortDir;
+                return rows.slice().sort((a, b) => {
+                    let va, vb;
+                    if (key === 'name') { va = (a.name || '').toLowerCase(); vb = (b.name || '').toLowerCase(); return dir * (va < vb ? -1 : va > vb ? 1 : 0); }
+                    if (key === 'country') { va = (a.country || '').toLowerCase(); vb = (b.country || '').toLowerCase(); return dir * (va < vb ? -1 : va > vb ? 1 : 0); }
+                    if (key === '2020') { va = a._pop20; vb = b._pop20; } else if (key === '2050') { va = a._pop50; vb = b._pop50; } else if (key === 'diff') { va = a._diff; vb = b._diff; } else return 0;
+                    return dir * (va - vb);
+                });
+            }
+            function updateAggListFromSelection() {
+                const titleEl = document.getElementById('aggDetailTitle');
+                let list = [];
+                if (aggSelectedFlows.size === 0) { list = aggCurrentAggsFull; titleEl.textContent = 'All agglomerations (' + list.length + ')'; }
+                else {
+                    aggSelectedFlows.forEach(key => { const [s20, s50] = key.split('-'); if (aggCurrentAggLists && aggCurrentAggLists[s20] && aggCurrentAggLists[s20][s50]) list.push(...aggCurrentAggLists[s20][s50]); });
+                    const labels = Array.from(aggSelectedFlows).map(k => k.replace('-', ' → '));
+                    titleEl.textContent = (labels.length === 1 ? labels[0] : labels.length + ' flows') + ' (' + list.length + ')';
+                }
+                aggCurrentListRows = list.map(aggToRow);
+                const tbody = document.getElementById('aggList');
+                tbody.innerHTML = sortAggListRows(aggCurrentListRows).map(r => '<tr><td>' + r.name + '</td><td>' + r.country + '</td><td class="num">' + r.pop20Str + '</td><td class="num">' + r.pop50Str + '</td><td class="num">' + r.diffStr + '</td></tr>').join('');
+                document.querySelectorAll('#aggTable th[data-col]').forEach(th => { th.classList.remove('sorted-asc', 'sorted-desc'); if (th.dataset.col === aggListSortBy) th.classList.add(aggListSortDir === 1 ? 'sorted-asc' : 'sorted-desc'); });
+            }
+            function updateAggMatrixHighlight() {
+                const cont = document.getElementById('aggMatrixContainer');
+                if (!cont) return;
+                cont.querySelectorAll('.cell-heat[data-s20][data-s50]').forEach(td => { td.classList.toggle('selected', aggSelectedFlows.has(aggFlowKey(td.dataset.s20, td.dataset.s50))); });
+                cont.querySelectorAll('th.col-header-click[data-node-id]').forEach(th => {
+                    const nodeKeys = getAggFlowsForNode(th.dataset.nodeId);
+                    th.classList.toggle('header-selected', nodeKeys.size > 0 && nodeKeys.size === aggSelectedFlows.size && [...nodeKeys].every(k => aggSelectedFlows.has(k)));
+                });
+                cont.querySelectorAll('td.row-header-click[data-node-id]').forEach(td => {
+                    const nodeKeys = getAggFlowsForNode(td.dataset.nodeId);
+                    td.classList.toggle('header-selected', nodeKeys.size > 0 && nodeKeys.size === aggSelectedFlows.size && [...nodeKeys].every(k => aggSelectedFlows.has(k)));
+                });
+            }
+            function updateAggSankeyHighlight() {
+                if (!aggSankeyChart || !aggSankeyChart.series || !aggSankeyChart.series[0]) return;
+                aggSankeyChart.series[0].points.forEach(p => {
+                    const k = aggFlowKey((p.from || '').replace('2020-', ''), (p.to || '').replace('2050-', ''));
+                    const op = aggSelectedFlows.has(k) ? 1 : 0.6;
+                    if (p.graphic) p.graphic.attr({ opacity: op }); else p.update({ opacity: op }, false);
+                });
+                aggSankeyChart.redraw();
+            }
+            function getAggFlowsForNode(nodeId) {
+                const keys = new Set();
+                if (!nodeId) return keys;
+                if (nodeId.startsWith('2020-')) { const s20 = nodeId.replace('2020-', ''); SIZE_ORDER_AGG.forEach(s50 => keys.add(aggFlowKey(s20, s50))); }
+                else if (nodeId.startsWith('2050-')) { const s50 = nodeId.replace('2050-', ''); SIZE_ORDER_AGG.forEach(s20 => keys.add(aggFlowKey(s20, s50))); }
+                return keys;
+            }
+            function selectAggNodeFlows(nodeId) {
+                const nodeKeys = getAggFlowsForNode(nodeId);
+                if (!nodeKeys.size) return;
+                const same = nodeKeys.size === aggSelectedFlows.size && [...nodeKeys].every(k => aggSelectedFlows.has(k));
+                if (same) aggSelectedFlows.clear(); else { aggSelectedFlows.clear(); nodeKeys.forEach(k => aggSelectedFlows.add(k)); }
+                updateAggListFromSelection(); updateAggMatrixHighlight(); updateAggSankeyHighlight();
+            }
+            function toggleAggFlow(s20, s50) {
+                const key = aggFlowKey(s20, s50);
+                if (aggSelectedFlows.has(key)) aggSelectedFlows.delete(key); else aggSelectedFlows.add(key);
+                updateAggListFromSelection(); updateAggMatrixHighlight(); updateAggSankeyHighlight();
+            }
+            function clearAggSelection() {
+                aggSelectedFlows.clear();
+                updateAggListFromSelection(); updateAggMatrixHighlight(); updateAggSankeyHighlight();
+            }
+            function onAggListHeaderClick(col) {
+                if (aggListSortBy === col) aggListSortDir = -aggListSortDir; else { aggListSortBy = col; aggListSortDir = 1; }
+                document.querySelectorAll('#aggTable th[data-col]').forEach(th => { th.classList.remove('sorted-asc', 'sorted-desc'); if (th.dataset.col === aggListSortBy) th.classList.add(aggListSortDir === 1 ? 'sorted-asc' : 'sorted-desc'); });
+                const tbody = document.getElementById('aggList');
+                tbody.innerHTML = sortAggListRows(aggCurrentListRows).map(r => '<tr><td>' + r.name + '</td><td>' + r.country + '</td><td class="num">' + r.pop20Str + '</td><td class="num">' + r.pop50Str + '</td><td class="num">' + r.diffStr + '</td></tr>').join('');
+            }
+            function renderAggMatrix(countryCodes) {
+                const container = document.getElementById('aggMatrixContainer');
+                const codes = Array.isArray(countryCodes) ? countryCodes : [countryCodes];
+                const result = buildAggMatrix(codes);
+                const { matrix, total, aggLists, aggs } = result;
+                aggCurrentAggLists = aggLists;
+                aggCurrentAggsFull = aggs || [];
+                if (!matrix || total === 0) {
+                    container.innerHTML = '<div class="empty-state">No agglomerations for selected countries.</div>';
+                    aggSelectedFlows.clear();
+                    updateAggListFromSelection();
+                    return;
+                }
+                const rowTotals = {};
+                SIZE_ORDER_AGG.forEach(s20 => { rowTotals[s20] = SIZE_ORDER_AGG.reduce((sum, s50) => sum + matrix[s20][s50], 0); });
+                const colTotals = {};
+                SIZE_ORDER_AGG.forEach(s50 => { colTotals[s50] = SIZE_ORDER_AGG.reduce((sum, s20) => sum + matrix[s20][s50], 0); });
+                let maxCell = 0;
+                SIZE_ORDER_AGG.forEach(s20 => { SIZE_ORDER_AGG.forEach(s50 => { maxCell = Math.max(maxCell, matrix[s20][s50]); }); });
+                const heatScale = maxCell > 0 ? v => 'rgba(91, 143, 163, ' + (0.15 + 0.7 * (v / maxCell)) + ')' : () => '#fff';
+                let html = '<table class="transition-table"><thead><tr><th class="row-header">2020 ↓ / 2050 →</th>';
+                SIZE_ORDER_AGG.forEach(s50 => { html += '<th class="col-header-click" data-node-id="2050-' + s50 + '" title="Click to filter by ' + s50 + ' (2050)">' + s50 + '</th>'; });
+                html += '<th>Total</th></tr></thead><tbody>';
+                SIZE_ORDER_AGG.forEach(s20 => {
+                    const rTotal = rowTotals[s20];
+                    html += '<tr class="' + (SIZE_CLASS_AGG[s20] || '') + '"><td class="row-header row-header-click" data-node-id="2020-' + s20 + '" title="Click to filter by ' + s20 + ' (2020)">' + s20 + '</td>';
+                    SIZE_ORDER_AGG.forEach(s50 => {
+                        const n = matrix[s20][s50];
+                        const pct = rTotal > 0 ? (n / rTotal * 100).toFixed(1) : '0';
+                        const bg = heatScale(n);
+                        const sel = aggSelectedFlows.has(aggFlowKey(s20, s50)) ? ' selected' : '';
+                        html += '<td class="num cell-heat' + sel + '" style="background:' + bg + '" data-s20="' + s20 + '" data-s50="' + s50 + '" title="Click to toggle: ' + s20 + ' → ' + s50 + ' (' + n + ')">' + n + ' <span style="color:#6B7A8A">(' + pct + '%)</span></td>';
+                    });
+                    html += '<td class="num">' + rTotal + '</td></tr>';
+                });
+                html += '<tr class="row-total"><td class="row-header">Total</td>';
+                SIZE_ORDER_AGG.forEach(s50 => { html += '<td class="num">' + colTotals[s50] + '</td>'; });
+                html += '<td class="num">' + total + '</td></tr></tbody></table>';
+                container.innerHTML = html;
+                container.querySelectorAll('.cell-heat[data-s20][data-s50]').forEach(td => { td.addEventListener('click', () => toggleAggFlow(td.dataset.s20, td.dataset.s50)); });
+                container.querySelectorAll('th.col-header-click[data-node-id]').forEach(th => { th.addEventListener('click', () => selectAggNodeFlows(th.dataset.nodeId)); });
+                container.querySelectorAll('td.row-header-click[data-node-id]').forEach(td => { td.addEventListener('click', () => selectAggNodeFlows(td.dataset.nodeId)); });
+                updateAggMatrixHighlight();
+            }
+            function bindAggSankeyNodeClicks(chart) {
+                const series = chart.series && chart.series[0];
+                if (!series) return;
+                const nodeList = series.nodeList || (series.nodes && series.nodes.length ? series.nodes : []);
+                nodeList.forEach(function(node) {
+                    const nodeId = (node.id != null ? node.id : (node.options && node.options.id)) || '';
+                    if (!nodeId.startsWith('2020-') && !nodeId.startsWith('2050-')) return;
+                    const graphic = node.graphic || (node.node && node.node.graphic);
+                    const el = graphic && graphic.element;
+                    if (el) { el.style.cursor = 'pointer'; el.addEventListener('click', function() { selectAggNodeFlows(nodeId); }); }
+                });
+            }
+            function renderAggSankey(countryCodes) {
+                const container = document.getElementById('aggSankeyContainer');
+                const codes = Array.isArray(countryCodes) ? countryCodes : [countryCodes];
+                const result = buildAggMatrix(codes);
+                const { matrix, total, aggLists } = result;
+                aggCurrentAggLists = aggLists;
+                if (!matrix || total === 0) {
+                    container.innerHTML = '<div class="empty-state">No data for selected countries.</div>';
+                    if (aggSankeyChart) { aggSankeyChart.destroy(); aggSankeyChart = null; }
+                    return;
+                }
+                const sankeyData = [];
+                SIZE_ORDER_AGG.forEach(s20 => { SIZE_ORDER_AGG.forEach(s50 => { const v = matrix[s20][s50]; if (v > 0) sankeyData.push(['2020-' + s20, '2050-' + s50, v]); }); });
+                if (aggSankeyChart) aggSankeyChart.destroy();
+                const chartHeight = Math.max(200, container.clientHeight || 260);
+                aggSankeyChart = Highcharts.chart(container, {
+                    chart: { type: 'sankey', height: chartHeight, backgroundColor: 'transparent', events: { load: function() { const ch = this; setTimeout(function() { bindAggSankeyNodeClicks(ch); }, 0); } } },
+                    title: { text: null },
+                    tooltip: { pointFormat: '{point.from} → {point.to}: <b>{point.weight}</b> agglomerations<br/><span style="font-size:10px">Click to filter list</span>', useHTML: true, nodeFormatter: function() { return '<b>' + (this.name || this.id) + '</b><br/><span style="font-size:10px">Click to filter by this node</span>'; } },
+                    plotOptions: { sankey: {
+                        dataLabels: { enabled: true, format: '{point.fromNode.name} → {point.toNode.name}', nodeFormat: '{point.name}' },
+                        point: { events: { click: function() { const s20 = (this.from || '').replace('2020-', ''); const s50 = (this.to || '').replace('2050-', ''); if (s20 && s50) toggleAggFlow(s20, s50); } }, cursor: 'pointer' },
+                        nodeWidth: 20, nodePadding: 10
+                    } },
+                    series: [{ type: 'sankey', name: 'Size transition', keys: ['from', 'to', 'weight'], data: sankeyData,
+                        nodes: [
+                            { id: '2020-Small', name: 'S (2020)', color: SIZE_COLOR_AGG.Small }, { id: '2020-Intermediate', name: 'M (2020)', color: SIZE_COLOR_AGG.Intermediate }, { id: '2020-Large', name: 'L (2020)', color: SIZE_COLOR_AGG.Large },
+                            { id: '2050-Small', name: 'S (2050)', color: SIZE_COLOR_AGG.Small }, { id: '2050-Intermediate', name: 'M (2050)', color: SIZE_COLOR_AGG.Intermediate }, { id: '2050-Large', name: 'L (2050)', color: SIZE_COLOR_AGG.Large }
+                        ], colorByPoint: false, linkOpacity: 0.6
+                    }]
+                });
+            }
+            function bindAggListSort() {
+                document.querySelectorAll('#aggTable th[data-col]').forEach(th => { th.addEventListener('click', () => onAggListHeaderClick(th.dataset.col)); });
+            }
+            window.updateAgglomerationSection = function() {
+                const countryChartsPanel = document.getElementById('countryChartsPanel');
+                const aggViewPanel = document.getElementById('aggViewPanel');
+                const aggEntryBar = document.getElementById('aggEntryBar');
+                const aggEntryCountryName = document.getElementById('aggEntryCountryName');
+                const placeholder = document.getElementById('aggPlaceholder');
+                const content = document.getElementById('aggContent');
+                const titleEl = document.getElementById('aggSectionTitle');
+                if (!placeholder || !content) return;
+                const metricEl = document.getElementById('metricType');
+                const metric = (metricEl && metricEl.value) || 'fusion';
+                const isFusion = metric === 'fusion';
+                const hasSelection = selectedCountries.size >= 1;
+                const inAggView = hasSelection && aggViewActive && isFusion;
+                if (countryChartsPanel) countryChartsPanel.classList.toggle('hidden', inAggView);
+                if (aggViewPanel) aggViewPanel.classList.toggle('visible', inAggView);
+                if (aggEntryBar && aggEntryCountryName) {
+                    if (hasSelection && !aggViewActive && isFusion) {
+                        aggEntryBar.style.display = 'flex';
+                        aggEntryCountryName.textContent = selectedCountries.size === 1
+                            ? (getCountryDisplayName(Array.from(selectedCountries)[0]) || Array.from(selectedCountries)[0])
+                            : selectedCountries.size + ' countries';
+                    } else {
+                        aggEntryBar.style.display = 'none';
+                    }
+                }
+                var viewAggBtn = document.getElementById('btnViewAgglomeration');
+                if (viewAggBtn && !viewAggBtn._aggBound) {
+                    viewAggBtn._aggBound = true;
+                    viewAggBtn.addEventListener('click', function() {
+                        aggViewActive = true;
+                        updateAgglomerationSection();
+                    });
+                }
+                if (selectedCountries.size === 0) {
+                    aggViewActive = false;
+                    placeholder.style.display = 'block';
+                    content.style.display = 'none';
+                    if (titleEl) titleEl.textContent = 'Agglomeration size transition (2020→2050)';
+                    return;
+                }
+                if (!inAggView) return;
+                const countryCodes = Array.from(selectedCountries);
+                if (!aggRawData) {
+                    placeholder.textContent = 'Loading agglomeration data…';
+                    placeholder.style.display = 'block';
+                    content.style.display = 'none';
+                    if (titleEl) titleEl.textContent = countryCodes.length === 1
+                        ? 'Agglomeration size transition (2020→2050) – ' + (getCountryDisplayName(countryCodes[0]) || countryCodes[0])
+                        : 'Agglomeration size transition (2020→2050) – ' + countryCodes.length + ' countries';
+                    return;
+                }
+                placeholder.style.display = 'none';
+                content.style.display = 'flex';
+                if (titleEl) titleEl.textContent = countryCodes.length === 1
+                    ? 'Agglomeration size transition (2020→2050) – ' + (getCountryDisplayName(countryCodes[0]) || countryCodes[0])
+                    : 'Agglomeration size transition (2020→2050) – ' + countryCodes.length + ' countries';
+                renderAggMatrix(countryCodes);
+                renderAggSankey(countryCodes);
+                updateAggListFromSelection();
+                updateAggMatrixHighlight();
+                updateAggSankeyHighlight();
+                if (!aggBound) {
+                    aggBound = true;
+                    bindAggListSort();
+                    const btn = document.getElementById('aggBtnShowAll');
+                    if (btn) btn.addEventListener('click', clearAggSelection);
+                    const backBtn = document.getElementById('aggBtnBack');
+                    if (backBtn) backBtn.addEventListener('click', function() {
+                        aggViewActive = false;
+                        updateAgglomerationSection();
+                    });
+                }
+            };
+            fetch('./merged_agglomerations_by_country.json')
+                .then(r => r.json())
+                .then(data => { aggRawData = data; if (selectedCountries.size > 0) updateAgglomerationSection(); })
+                .catch(() => {});
+        })();
 
         loadData();
     </script>
